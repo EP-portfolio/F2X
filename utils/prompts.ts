@@ -1,90 +1,48 @@
 import { ExerciseData } from './exerciseGenerator';
+import { Language } from '../types';
 
 // ============================================================
-// CONTEXTE FEW-SHOT POUR GÉNÉRATION D'ÉNONCÉS
-// Compétence : Tableaux d'effectifs et fréquences
-// Source : Exercices réels du Brevet des Collèges
+// CONTEXTE FEW-SHOT (FRANCAIS)
 // ============================================================
 
-export const CONTEXTE_GENERATION_ENONCES = `
+const CONTEXTE_GENERATION_ENONCES_FR = `
 Tu es un générateur d'exercices de mathématiques pour le Brevet des Collèges (3ème).
 Tu dois créer des énoncés de problèmes sur les TABLEAUX D'EFFECTIFS ET FRÉQUENCES.
+Style : Brevet, scolaire, précis.
 
-RÈGLES IMPORTANTES :
-1. L'énoncé doit être contextualisé (situation réelle, concrète)
-2. Les données brutes sont fournies sous forme de liste
-3. L'élève doit compléter un tableau avec : valeurs, effectifs, fréquences
-4. La précision d'arrondi doit être mentionnée explicitement
-5. Le style doit être celui du Brevet : clair, structuré, professionnel
-6. Évite les formulations enfantines ou trop simples
+RÈGLES :
+1. Contexte réaliste.
+2. Données brutes fournies.
+3. Tableau à compléter (Valeurs, Effectifs, Fréquences).
+4. Précision d'arrondi explicite.
 
-VOICI 5 EXEMPLES RÉELS D'ÉNONCÉS DU BREVET :
+EXEMPLE (Style attendu) :
+"Voici les notes d'une classe. Calculer l'étendue. Compléter le tableau des fréquences (arrondir au dixième). Quelle est la moyenne ?"
+`;
 
-===== EXEMPLE 1 (Brevet Asie 2008) =====
-Voici le diagramme en bâtons des notes obtenues sur 20 par une classe de 25 élèves de 3ème au dernier devoir de mathématiques.
+// ============================================================
+// FEW-SHOT CONTEXT (ENGLISH)
+// ============================================================
 
-1) Calculer l'étendue des notes.
-2) Compléter le tableau suivant :
-   | Note | Effectif | Fréquence (%) |
-3) Calculer la moyenne des notes.
-4) Déterminer la médiane des notes.
-5) Calculer le pourcentage d'élèves ayant eu une note inférieure ou égale à 14.
-   (Les fréquences seront arrondies au dixième près)
+const CONTEXTE_GENERATION_ENONCES_EN = `
+You are a math exercise generator for 9th Grade (Year 10 / 3ème) students.
+You must create problem statements regarding FREQUENCY TABLES AND STATISTICS.
+Style: Formal exam style (GCSE / SAT style), precise.
 
-===== EXEMPLE 2 (Brevet 2003 - 24h du Mans) =====
-La course automobile des 24 heures du Mans consiste à effectuer en 24 heures le plus grand nombre de tours d'un circuit. Le diagramme en bâtons ci-contre donne la répartition du nombre de tours effectués par les 25 premiers coureurs automobiles du rallye.
+RULES:
+1. Realistic context.
+2. Raw data provided.
+3. Table to complete (Values, Frequency, Relative Frequency).
+4. Rounding precision explicit.
 
-1) Compléter le tableau des effectifs et des effectifs cumulés croissants de cette série statistique :
-   | Nombre de tours | 310 | 320 | 330 | 340 | 350 | 360 |
-   | Effectif        |     |     |     |     |     |     |
-   | Eff. cumulé     |     |     |     |     |     |     |
-
-2) Déterminer la médiane et l'étendue de cette série.
-3) Calculer la moyenne de cette série (arrondir à l'unité).
-
-===== EXEMPLE 3 (Brevet - Lancer de javelot) =====
-Lors d'une compétition de lancer de javelot, on a relevé les performances de 25 sportifs. Voici les résultats en mètres :
-36, 42, 37, 43, 38, 44, 32, 40, 44, 36, 46, 39, 40, 40, 41, 41, 45, 37, 43, 43, 46, 39, 44, 47, 48
-
-1) Compléter le tableau suivant (les fréquences seront arrondies au centième) :
-   | Distance (m)  | [30;35[ | [35;40[ | [40;45[ | [45;50[ |
-   | Effectif      |         |         |         |         |
-   | Fréquence     |         |         |         |         |
-
-2) En utilisant les valeurs centrales, calculer la longueur moyenne d'un lancer.
-3) Quel est le pourcentage de sportifs ayant lancé au moins à 40 mètres ?
-
-===== EXEMPLE 4 (Brevet - Poids des cartables) =====
-Dans un collège, une enquête a été menée sur le poids des cartables des élèves. Pour cela, on a pesé le cartable de 48 élèves du collège. Les résultats de cette enquête sont inscrits dans le tableau ci-dessous :
-
-| Poids (kg) | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
-| Effectif   | 1 | 2 | 5 | 11| 8 | 8 | 3 | 4  |
-
-1) Calculer l'étendue de cette série statistique.
-2) Déterminer la médiane de cette série statistique.
-3) Déterminer les valeurs du premier quartile et du troisième quartile.
-4) Calculer la fréquence des élèves ayant un cartable de 6 kg ou plus (arrondir au centième).
-
-===== EXEMPLE 5 (Brevet - Contrôle de vitesse) =====
-Les gendarmes ont effectué un contrôle de vitesse sur le bord d'une route nationale. Les résultats sont donnés dans le tableau suivant :
-
-| Vitesse (km/h) | [70;80[ | [80;90[ | [90;100[ | [100;110[ | [110;120[ |
-| Effectif       |    8    |   25    |    42    |    18     |     7     |
-
-1) Combien de véhicules ont été contrôlés ?
-2) Calculer la fréquence de chaque classe de vitesse (arrondir à 0,01 près).
-3) Quel pourcentage de véhicules roulaient à 90 km/h ou plus ?
-4) Calculer la vitesse moyenne des automobilistes contrôlés.
-
-===== FIN DES EXEMPLES =====
-
-MAINTENANT, génère un nouvel énoncé en suivant ce modèle.
-Utilise les DONNÉES SUIVANTES pour créer l'énoncé :
+EXAMPLE (Expected style):
+"Here are the test scores of a class. Calculate the range. Complete the frequency table (round to one decimal place). What is the mean score?"
 `;
 
 // Structure pour générer un prompt complet
-export function genererPromptEnonce(exercice: any) {
-  const donneesExercice = `
+export function genererPromptEnonce(exercice: ExerciseData, lang: Language = 'fr') {
+  if (lang === 'fr') {
+      const donneesExercice = `
 DONNÉES DE L'EXERCICE À CRÉER :
 - Thème : ${exercice.titre}
 - Valeurs du caractère : ${exercice.valeurs.join(', ')}
@@ -93,41 +51,56 @@ DONNÉES DE L'EXERCICE À CRÉER :
 - Précision d'arrondi : ${exercice.arrondi.texteEnonce}
 
 CONSIGNES POUR L'ÉNONCÉ :
-1. Invente un contexte réaliste et engageant lié au thème "${exercice.titre}"
-2. Présente les données brutes (liste de valeurs individuelles OU tableau partiel à compléter)
+1. Invente un contexte réaliste lié au thème "${exercice.titre}"
+2. Présente les données brutes.
 3. Demande de compléter un tableau avec : Valeur | Effectif | Fréquence (fraction) | Fréquence (décimale) | Fréquence (%)
-4. Mentionne explicitement : "Les fréquences décimales et en pourcentage seront arrondies ${exercice.arrondi.texteEnonce}."
-5. Ajoute 1 ou 2 questions d'interprétation (ex: "Quel pourcentage de... ?", "Combien de... ont... ?")
-6. Style Brevet : professionnel, structuré, pas enfantin.
-7. Ne donne PAS la correction, juste l'énoncé.
-
-GÉNÈRE L'ÉNONCÉ MAINTENANT :
+4. Mentionne l'arrondi : "${exercice.arrondi.texteEnonce}".
+5. Ajoute 1 ou 2 questions d'interprétation.
+6. Ne donne PAS la correction.
 `;
+      return CONTEXTE_GENERATION_ENONCES_FR + donneesExercice;
+  } else {
+      const donneesExercice = `
+EXERCISE DATA TO CREATE:
+- Topic: ${exercice.titre}
+- Values: ${exercice.valeurs.join(', ')}
+- Counts (Frequency): ${exercice.effectifs.join(', ')}
+- Total Count: ${exercice.total}
+- Rounding Precision: ${exercice.arrondi.texteEnonce}
 
-  return CONTEXTE_GENERATION_ENONCES + donneesExercice;
+INSTRUCTIONS FOR THE PROBLEM STATEMENT:
+1. Invent a realistic context related to "${exercice.titre}".
+2. Present the raw data.
+3. Ask to complete a table with: Value | Frequency | Relative Freq (fraction) | Relative Freq (decimal) | Relative Freq (%)
+4. Mention rounding: "${exercice.arrondi.texteEnonce}".
+5. Add 1 or 2 interpretation questions.
+6. Do NOT provide the solution.
+`;
+      return CONTEXTE_GENERATION_ENONCES_EN + donneesExercice;
+  }
 }
 
 // Structure pour générer un prompt de correction
-export function genererPromptCorrection(exercice: any) {
-  return `
+export function genererPromptCorrection(exercice: ExerciseData, lang: Language = 'fr') {
+  if (lang === 'fr') {
+    return `
 Tu dois générer la CORRECTION COMPLÈTE de cet exercice de statistiques.
-
-DONNÉES :
-- Thème : ${exercice.titre}
-- Valeurs : ${exercice.valeurs.join(', ')}
-- Effectifs : ${exercice.effectifs.join(', ')}
-- Total : ${exercice.total}
-- Arrondi : ${exercice.arrondi.texteEnonce} (${exercice.arrondi.decimales} décimales)
-
-FRÉQUENCES CALCULÉES :
-${exercice.frequences.map((f: any, i: number) => 
-  `- Valeur ${exercice.valeurs[i]} : effectif ${exercice.effectifs[i]}, fraction ${f.fraction}, décimal ${f.decimalFormate}, pourcentage ${f.pourcentageFormate}%`
-).join('\n')}
-
+DONNÉES : Thème: ${exercice.titre}, Valeurs: ${exercice.valeurs.join(', ')}, Effectifs: ${exercice.effectifs.join(', ')}, Total: ${exercice.total}.
 GÉNÈRE :
-1. Le tableau complété avec toutes les valeurs
-2. Les calculs détaillés pour chaque fréquence
-3. Les réponses aux questions d'interprétation
-4. Présentation claire et structurée, style correction de Brevet
+1. Le tableau complété.
+2. Les calculs détaillés.
+3. Les réponses aux questions.
+Langue : Français.
 `;
+  } else {
+    return `
+You must generate the FULL SOLUTION for this statistics exercise.
+DATA: Topic: ${exercice.titre}, Values: ${exercice.valeurs.join(', ')}, Frequencies: ${exercice.effectifs.join(', ')}, Total: ${exercice.total}.
+GENERATE:
+1. The completed table.
+2. Detailed calculations.
+3. Answers to questions.
+Language: English.
+`;
+  }
 }

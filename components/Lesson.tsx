@@ -1,182 +1,403 @@
 import React, { useState } from 'react';
-import { LessonTopic } from '../types';
-import { ChevronRight, ChevronDown, BookOpen } from 'lucide-react';
+import { LessonTopic, Language } from '../types';
+import { ChevronRight, ChevronDown, BookOpen, Star, Zap, Layout } from 'lucide-react';
 
-const lessons: LessonTopic[] = [
-  {
-    id: 'effectifs',
-    title: '1. Effectifs et Tableaux',
-    description: 'Organiser des données brutes dans un tableau d\'effectifs.',
-    content: (
-      <div className="space-y-4">
-        <p className="text-gray-700">
-          Avant d'analyser des données, il faut les ranger. L'<strong>effectif</strong> d'une valeur est le nombre de fois que cette valeur apparaît dans la liste.
-        </p>
-        <div className="bg-white p-4 rounded shadow-sm border">
-          <h4 className="font-semibold mb-2">Exemple :</h4>
-          <p className="mb-2">Liste brute des couleurs de voitures : <br/>
-          <span className="font-mono text-sm bg-gray-100 p-1">Rouge, Bleu, Rouge, Noir, Bleu, Rouge</span></p>
-          
-          <table className="w-full text-sm text-left border-collapse mt-3">
-            <thead className="bg-indigo-50 text-indigo-900">
-              <tr>
-                <th className="border p-2">Couleur</th>
-                <th className="border p-2">Effectif</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td className="border p-2">Rouge</td><td className="border p-2 font-bold">3</td></tr>
-              <tr><td className="border p-2">Bleu</td><td className="border p-2 font-bold">2</td></tr>
-              <tr><td className="border p-2">Noir</td><td className="border p-2 font-bold">1</td></tr>
-              <tr className="bg-gray-50 font-bold"><td className="border p-2">TOTAL</td><td className="border p-2">6</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    )
-  },
-  {
-    id: 'frequences',
-    title: '2. Les Fréquences',
-    description: 'Calculer la proportion d\'une valeur par rapport au total.',
-    content: (
-      <div className="space-y-4">
-        <p className="text-gray-700">
-          La <strong>fréquence</strong> permet de savoir quelle part représente une catégorie par rapport au total. Elle peut s'écrire sous 3 formes : fraction, nombre décimal ou pourcentage.
-        </p>
-        <div className="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
-          <h4 className="font-bold text-blue-900 mb-2">Formule :</h4>
-          <p className="font-mono text-sm text-blue-800">
-            Fréquence = Effectif de la valeur / Effectif Total
-          </p>
-        </div>
-        <div className="bg-white p-4 rounded shadow-sm border">
-          <h4 className="font-semibold mb-2">Exemple (Voitures Rouges) :</h4>
-          <p>Effectif Rouge = 3. Effectif Total = 6.</p>
-          <ul className="list-disc list-inside mt-2 space-y-1">
-            <li><strong>Fraction :</strong> 3/6 = 1/2</li>
-            <li><strong>Décimal :</strong> 0,5</li>
-            <li><strong>Pourcentage :</strong> 0,5 × 100 = <strong>50%</strong></li>
-          </ul>
-        </div>
-      </div>
-    )
-  },
-  {
-    id: 'indicateurs_centraux',
-    title: '3. Moyenne et Médiane',
-    description: 'Les indicateurs de position centrale.',
-    content: (
-      <div className="space-y-6">
-        {/* Moyenne */}
-        <div>
-          <h4 className="font-bold text-lg text-indigo-700 mb-2">La Moyenne</h4>
-          <p className="text-gray-700 mb-2">
-             C'est le point d'équilibre. On additionne toutes les valeurs et on divise par l'effectif total.
-          </p>
-          <div className="bg-gray-100 p-3 rounded text-sm font-mono">
-             Moyenne = Somme des valeurs / Effectif Total
+interface LessonProps {
+  language: Language;
+}
+
+const getLessons = (lang: Language): LessonTopic[] => {
+  if (lang === 'fr') {
+    return [
+      {
+        id: 'effectifs',
+        title: '1. Effectifs et Tableaux',
+        description: 'Organiser des données brutes.',
+        content: (
+          <div className="space-y-6">
+            <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-100">
+              <h4 className="font-bold text-indigo-900 mb-2 flex items-center gap-2"><BookOpen size={20}/> Définition</h4>
+              <p className="text-indigo-800 leading-relaxed">
+                L'<strong>effectif</strong> d'une valeur est simplement le nombre de fois que cette valeur apparaît dans ta liste de données. C'est comme compter des points !
+              </p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+              <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2"><Zap size={20} className="text-amber-500" fill="currentColor" /> Exemple Concret</h4>
+              <p className="mb-4 text-gray-600">On a demandé à 6 élèves leur couleur préférée :</p>
+              
+              <div className="flex flex-wrap gap-2 mb-6">
+                {['Rouge', 'Bleu', 'Rouge', 'Noir', 'Bleu', 'Rouge'].map((c, i) => (
+                  <span key={i} className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium text-gray-600 border border-gray-200">{c}</span>
+                ))}
+              </div>
+              
+              <div className="overflow-hidden rounded-2xl border border-gray-100">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                    <tr>
+                      <th className="p-4 font-bold">Couleur</th>
+                      <th className="p-4 font-bold text-center">Effectif (Compte)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-gray-700 divide-y divide-gray-100">
+                    <tr><td className="p-4 font-medium text-red-500">Rouge</td><td className="p-4 text-center font-bold bg-red-50 text-red-700 rounded-lg">3</td></tr>
+                    <tr><td className="p-4 font-medium text-blue-500">Bleu</td><td className="p-4 text-center font-bold bg-blue-50 text-blue-700 rounded-lg">2</td></tr>
+                    <tr><td className="p-4 font-medium text-gray-800">Noir</td><td className="p-4 text-center font-bold bg-gray-100 text-gray-700 rounded-lg">1</td></tr>
+                    <tr className="bg-gray-50"><td className="p-4 font-bold text-gray-900">TOTAL</td><td className="p-4 text-center font-black text-indigo-600 text-lg">6</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </div>
-
-        {/* Médiane */}
-        <div className="border-t pt-4">
-          <h4 className="font-bold text-lg text-indigo-700 mb-2">La Médiane</h4>
-          <p className="text-gray-700 mb-2">
-            C'est la valeur qui coupe la série <strong>ordonnée</strong> en deux groupes de même effectif (50% inférieurs, 50% supérieurs).
-          </p>
-           <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-500 text-sm">
-            <ul className="list-disc list-inside space-y-1">
-              <li><strong>Effectif Impair :</strong> La valeur juste au milieu.</li>
-              <li><strong>Effectif Pair :</strong> La moyenne des deux valeurs centrales.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    )
-  },
-  {
-    id: 'dispersion',
-    title: '4. Quartiles et Dispersion',
-    description: 'Comprendre comment les valeurs sont réparties (Q1, Q3, Étendue).',
-    content: (
-      <div className="space-y-6">
-        <p className="text-gray-700">
-           Pour savoir si les données sont regroupées ou très étalées, on utilise des indicateurs de dispersion.
-        </p>
-
-        {/* Étendue */}
-        <div className="bg-white p-4 rounded border">
-            <h4 className="font-bold text-green-700">L'Étendue</h4>
-            <p className="text-sm">Différence entre la plus grande et la plus petite valeur.</p>
-            <p className="font-mono bg-green-50 p-1 mt-1 text-sm">Étendue = Max - Min</p>
-        </div>
-
-        {/* Quartiles */}
-        <div>
-            <h4 className="font-bold text-purple-700 mb-2">Les Quartiles (Q1 et Q3)</h4>
-            <p className="text-gray-700 text-sm mb-2">
-                Les quartiles partagent la série ordonnée en 4 parties.
+        )
+      },
+      {
+        id: 'frequences',
+        title: '2. Les Fréquences',
+        description: 'La part du gâteau (Proportions).',
+        content: (
+          <div className="space-y-6">
+            <p className="text-gray-600 text-lg">
+              La <strong>fréquence</strong>, c'est la part du gâteau 🍰. Elle permet de comparer même si les totaux sont différents.
             </p>
-            <ul className="space-y-3">
-                <li className="bg-purple-50 p-3 rounded">
-                    <strong>Q1 (Premier Quartile) :</strong> La plus petite valeur telle qu'au moins 25% des données soient inférieures ou égales à elle.<br/>
-                    <span className="text-xs text-purple-600">Calcul du rang : N ÷ 4 (arrondi à l'entier supérieur).</span>
-                </li>
-                <li className="bg-purple-50 p-3 rounded">
-                    <strong>Q3 (Troisième Quartile) :</strong> La plus petite valeur telle qu'au moins 75% des données soient inférieures ou égales à elle.<br/>
-                    <span className="text-xs text-purple-600">Calcul du rang : 3 × N ÷ 4 (arrondi à l'entier supérieur).</span>
-                </li>
-            </ul>
-        </div>
+            
+            <div className="grid md:grid-cols-2 gap-4">
+               <div className="bg-sky-50 p-5 rounded-3xl border border-sky-100">
+                 <h4 className="font-bold text-sky-900 mb-2">La Formule Magique</h4>
+                 <div className="bg-white p-3 rounded-xl text-center shadow-sm border border-sky-100 font-bold text-sky-600">
+                    Effectif ÷ Total
+                 </div>
+               </div>
+               <div className="bg-fuchsia-50 p-5 rounded-3xl border border-fuchsia-100">
+                  <h4 className="font-bold text-fuchsia-900 mb-2">Les 3 Formes</h4>
+                  <div className="flex justify-around items-center text-sm font-medium text-fuchsia-800">
+                     <span className="bg-white px-2 py-1 rounded-lg shadow-sm">1/2</span>
+                     <span>➔</span>
+                     <span className="bg-white px-2 py-1 rounded-lg shadow-sm">0,5</span>
+                     <span>➔</span>
+                     <span className="bg-white px-2 py-1 rounded-lg shadow-sm">50%</span>
+                  </div>
+               </div>
+            </div>
 
-        {/* Écart Inter-quartile */}
-        <div className="bg-gray-800 text-white p-4 rounded-lg">
-            <h4 className="font-bold mb-1">L'Écart Inter-quartile</h4>
-            <p className="text-sm mb-2">C'est la largeur de la zone où se trouvent les 50% de valeurs centrales.</p>
-            <p className="font-mono text-center text-lg">I = Q3 - Q1</p>
-        </div>
-      </div>
-    )
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+              <h4 className="font-bold text-gray-800 mb-3">Exemple : Voitures Rouges (3 sur 6)</h4>
+              <ul className="space-y-3">
+                <li className="flex items-center justify-between bg-gray-50 p-3 rounded-xl">
+                    <span className="text-gray-600">En fraction</span>
+                    <strong className="text-gray-900">3/6 = 1/2</strong>
+                </li>
+                <li className="flex items-center justify-between bg-gray-50 p-3 rounded-xl">
+                    <span className="text-gray-600">En décimal</span>
+                    <strong className="text-gray-900">0,5</strong>
+                </li>
+                <li className="flex items-center justify-between bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                    <span className="text-emerald-800">En pourcentage</span>
+                    <strong className="text-emerald-600 text-lg">50%</strong>
+                </li>
+              </ul>
+            </div>
+          </div>
+        )
+      },
+      {
+        id: 'indicateurs_centraux',
+        title: '3. Moyenne et Médiane',
+        description: 'Où se situe le centre ?',
+        content: (
+          <div className="space-y-8">
+            {/* Moyenne */}
+            <div className="relative pl-4">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-200 rounded-full"></div>
+              <h4 className="font-bold text-2xl text-indigo-700 mb-2">La Moyenne</h4>
+              <p className="text-gray-600 mb-4">C'est le point d'équilibre. Imagine que tu redistribues tout équitablement.</p>
+              <div className="bg-indigo-600 text-white p-4 rounded-2xl text-center font-bold shadow-lg shadow-indigo-200 transform hover:scale-[1.02] transition-transform">
+                 Somme de tout ÷ Nombre total
+              </div>
+            </div>
+
+            {/* Médiane */}
+            <div className="relative pl-4">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-300 rounded-full"></div>
+              <h4 className="font-bold text-2xl text-amber-600 mb-2">La Médiane</h4>
+              <p className="text-gray-600 mb-4">C'est la valeur du milieu quand tout est rangé dans l'ordre.</p>
+               <div className="bg-amber-50 p-5 rounded-3xl border border-amber-100">
+                <ul className="space-y-3 text-amber-900 font-medium">
+                  <li className="flex gap-3 items-start">
+                    <span className="bg-amber-200 text-amber-800 rounded-full w-6 h-6 flex items-center justify-center text-xs flex-shrink-0">1</span>
+                    Si total IMPAIR : C'est pile la valeur au centre.
+                  </li>
+                  <li className="flex gap-3 items-start">
+                    <span className="bg-amber-200 text-amber-800 rounded-full w-6 h-6 flex items-center justify-center text-xs flex-shrink-0">2</span>
+                    Si total PAIR : C'est la moyenne des deux valeurs du centre.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )
+      },
+      {
+        id: 'dispersion',
+        title: '4. Quartiles (Q1, Q3) et Étendue',
+        description: 'Les données sont-elles étalées ?',
+        content: (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-emerald-400 to-teal-500 p-6 rounded-3xl text-white shadow-lg">
+                <h4 className="font-bold text-xl mb-1 opacity-90">L'Étendue</h4>
+                <p className="text-emerald-50 text-sm mb-3 opacity-80">La distance entre les extrêmes.</p>
+                <div className="text-3xl font-black tracking-tight">Max - Min</div>
+            </div>
+
+            <div>
+                <h4 className="font-bold text-violet-800 text-xl mb-4 px-2">Les Quartiles (Q1 et Q3)</h4>
+                <div className="grid gap-4">
+                    <div className="bg-white p-5 rounded-3xl border-2 border-violet-100 hover:border-violet-300 transition-colors">
+                        <div className="flex justify-between items-center mb-2">
+                           <strong className="text-violet-900 text-lg">Q1 (Premier Quartile)</strong>
+                           <span className="bg-violet-100 text-violet-700 px-2 py-1 rounded-lg text-xs font-bold">25%</span>
+                        </div>
+                        <p className="text-gray-500 text-sm">Le premier quart de la classe est en dessous de cette note.</p>
+                        <div className="mt-3 bg-gray-50 rounded-xl p-2 text-center text-violet-600 font-mono text-sm">Rang : N ÷ 4</div>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-3xl border-2 border-fuchsia-100 hover:border-fuchsia-300 transition-colors">
+                        <div className="flex justify-between items-center mb-2">
+                           <strong className="text-fuchsia-900 text-lg">Q3 (Troisième Quartile)</strong>
+                           <span className="bg-fuchsia-100 text-fuchsia-700 px-2 py-1 rounded-lg text-xs font-bold">75%</span>
+                        </div>
+                        <p className="text-gray-500 text-sm">Les trois quarts de la classe sont en dessous.</p>
+                        <div className="mt-3 bg-gray-50 rounded-xl p-2 text-center text-fuchsia-600 font-mono text-sm">Rang : 3 × N ÷ 4</div>
+                    </div>
+                </div>
+            </div>
+          </div>
+        )
+      }
+    ];
+  } else {
+    // ENGLISH CONTENT
+    return [
+      {
+        id: 'effectifs',
+        title: '1. Frequency and Tables',
+        description: 'Organize raw data.',
+        content: (
+          <div className="space-y-6">
+            <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-100">
+              <h4 className="font-bold text-indigo-900 mb-2 flex items-center gap-2"><BookOpen size={20}/> Definition</h4>
+              <p className="text-indigo-800 leading-relaxed">
+                The <strong>Frequency</strong> (or Count) is simply how many times a value appears in your list. It's like keeping score!
+              </p>
+            </div>
+            
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+              <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2"><Zap size={20} className="text-amber-500" fill="currentColor" /> Concrete Example</h4>
+              <p className="mb-4 text-gray-600">We asked 6 students their favorite color:</p>
+              
+              <div className="flex flex-wrap gap-2 mb-6">
+                {['Red', 'Blue', 'Red', 'Black', 'Blue', 'Red'].map((c, i) => (
+                  <span key={i} className="px-3 py-1 bg-gray-100 rounded-full text-sm font-medium text-gray-600 border border-gray-200">{c}</span>
+                ))}
+              </div>
+              
+              <div className="overflow-hidden rounded-2xl border border-gray-100">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                    <tr>
+                      <th className="p-4 font-bold">Color</th>
+                      <th className="p-4 font-bold text-center">Frequency (Count)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-gray-700 divide-y divide-gray-100">
+                    <tr><td className="p-4 font-medium text-red-500">Red</td><td className="p-4 text-center font-bold bg-red-50 text-red-700 rounded-lg">3</td></tr>
+                    <tr><td className="p-4 font-medium text-blue-500">Blue</td><td className="p-4 text-center font-bold bg-blue-50 text-blue-700 rounded-lg">2</td></tr>
+                    <tr><td className="p-4 font-medium text-gray-800">Black</td><td className="p-4 text-center font-bold bg-gray-100 text-gray-700 rounded-lg">1</td></tr>
+                    <tr className="bg-gray-50"><td className="p-4 font-bold text-gray-900">TOTAL</td><td className="p-4 text-center font-black text-indigo-600 text-lg">6</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )
+      },
+      {
+        id: 'frequences',
+        title: '2. Relative Frequency',
+        description: 'The slice of the cake (Proportions).',
+        content: (
+          <div className="space-y-6">
+            <p className="text-gray-600 text-lg">
+              The <strong>Relative Frequency</strong> represents the share of the total. It allows us to compare even if totals are different.
+            </p>
+            
+            <div className="grid md:grid-cols-2 gap-4">
+               <div className="bg-sky-50 p-5 rounded-3xl border border-sky-100">
+                 <h4 className="font-bold text-sky-900 mb-2">The Magic Formula</h4>
+                 <div className="bg-white p-3 rounded-xl text-center shadow-sm border border-sky-100 font-bold text-sky-600">
+                    Frequency ÷ Total
+                 </div>
+               </div>
+               <div className="bg-fuchsia-50 p-5 rounded-3xl border border-fuchsia-100">
+                  <h4 className="font-bold text-fuchsia-900 mb-2">The 3 Forms</h4>
+                  <div className="flex justify-around items-center text-sm font-medium text-fuchsia-800">
+                     <span className="bg-white px-2 py-1 rounded-lg shadow-sm">1/2</span>
+                     <span>➔</span>
+                     <span className="bg-white px-2 py-1 rounded-lg shadow-sm">0.5</span>
+                     <span>➔</span>
+                     <span className="bg-white px-2 py-1 rounded-lg shadow-sm">50%</span>
+                  </div>
+               </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+              <h4 className="font-bold text-gray-800 mb-3">Example: Red Cars (3 out of 6)</h4>
+              <ul className="space-y-3">
+                <li className="flex items-center justify-between bg-gray-50 p-3 rounded-xl">
+                    <span className="text-gray-600">Fraction</span>
+                    <strong className="text-gray-900">3/6 = 1/2</strong>
+                </li>
+                <li className="flex items-center justify-between bg-gray-50 p-3 rounded-xl">
+                    <span className="text-gray-600">Decimal</span>
+                    <strong className="text-gray-900">0.5</strong>
+                </li>
+                <li className="flex items-center justify-between bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                    <span className="text-emerald-800">Percentage</span>
+                    <strong className="text-emerald-600 text-lg">50%</strong>
+                </li>
+              </ul>
+            </div>
+          </div>
+        )
+      },
+      {
+        id: 'indicateurs_centraux',
+        title: '3. Mean and Median',
+        description: 'Where is the center?',
+        content: (
+          <div className="space-y-8">
+            {/* Mean */}
+            <div className="relative pl-4">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-200 rounded-full"></div>
+              <h4 className="font-bold text-2xl text-indigo-700 mb-2">The Mean</h4>
+              <p className="text-gray-600 mb-4">It is the balance point. Imagine redistributing everything equally.</p>
+              <div className="bg-indigo-600 text-white p-4 rounded-2xl text-center font-bold shadow-lg shadow-indigo-200 transform hover:scale-[1.02] transition-transform">
+                 Sum of all values ÷ Total Count
+              </div>
+            </div>
+
+            {/* Median */}
+            <div className="relative pl-4">
+              <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-300 rounded-full"></div>
+              <h4 className="font-bold text-2xl text-amber-600 mb-2">The Median</h4>
+              <p className="text-gray-600 mb-4">It is the middle value when data is ordered.</p>
+               <div className="bg-amber-50 p-5 rounded-3xl border border-amber-100">
+                <ul className="space-y-3 text-amber-900 font-medium">
+                  <li className="flex gap-3 items-start">
+                    <span className="bg-amber-200 text-amber-800 rounded-full w-6 h-6 flex items-center justify-center text-xs flex-shrink-0">1</span>
+                    If ODD total: It's exactly the middle value.
+                  </li>
+                  <li className="flex gap-3 items-start">
+                    <span className="bg-amber-200 text-amber-800 rounded-full w-6 h-6 flex items-center justify-center text-xs flex-shrink-0">2</span>
+                    If EVEN total: It's the average of the two middle values.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )
+      },
+      {
+        id: 'dispersion',
+        title: '4. Quartiles (Q1, Q3) and Range',
+        description: 'Is the data spread out?',
+        content: (
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-emerald-400 to-teal-500 p-6 rounded-3xl text-white shadow-lg">
+                <h4 className="font-bold text-xl mb-1 opacity-90">The Range</h4>
+                <p className="text-emerald-50 text-sm mb-3 opacity-80">The distance between extremes.</p>
+                <div className="text-3xl font-black tracking-tight">Max - Min</div>
+            </div>
+
+            <div>
+                <h4 className="font-bold text-violet-800 text-xl mb-4 px-2">Quartiles (Q1 and Q3)</h4>
+                <div className="grid gap-4">
+                    <div className="bg-white p-5 rounded-3xl border-2 border-violet-100 hover:border-violet-300 transition-colors">
+                        <div className="flex justify-between items-center mb-2">
+                           <strong className="text-violet-900 text-lg">Q1 (First Quartile)</strong>
+                           <span className="bg-violet-100 text-violet-700 px-2 py-1 rounded-lg text-xs font-bold">25%</span>
+                        </div>
+                        <p className="text-gray-500 text-sm">The first quarter of the data is below this value.</p>
+                        <div className="mt-3 bg-gray-50 rounded-xl p-2 text-center text-violet-600 font-mono text-sm">Rank: N ÷ 4</div>
+                    </div>
+
+                    <div className="bg-white p-5 rounded-3xl border-2 border-fuchsia-100 hover:border-fuchsia-300 transition-colors">
+                        <div className="flex justify-between items-center mb-2">
+                           <strong className="text-fuchsia-900 text-lg">Q3 (Third Quartile)</strong>
+                           <span className="bg-fuchsia-100 text-fuchsia-700 px-2 py-1 rounded-lg text-xs font-bold">75%</span>
+                        </div>
+                        <p className="text-gray-500 text-sm">Three quarters of the data are below this value.</p>
+                        <div className="mt-3 bg-gray-50 rounded-xl p-2 text-center text-fuchsia-600 font-mono text-sm">Rank: 3 × N ÷ 4</div>
+                    </div>
+                </div>
+            </div>
+          </div>
+        )
+      }
+    ];
   }
-];
+};
 
-export const Lesson: React.FC = () => {
+export const Lesson: React.FC<LessonProps> = ({ language }) => {
   const [openLesson, setOpenLesson] = useState<string | null>('effectifs');
+  const lessons = getLessons(language);
 
   const toggleLesson = (id: string) => {
     setOpenLesson(openLesson === id ? null : id);
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-8">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-        <BookOpen className="text-indigo-600" />
-        Cours de Statistiques
-      </h2>
+    <div className="max-w-4xl mx-auto p-4 md:p-8 animate-fade-in">
+      <div className="flex items-center gap-4 mb-8">
+        <div className="bg-white p-3 rounded-2xl shadow-sm border border-blue-100 text-blue-600">
+            <Layout size={32} />
+        </div>
+        <div>
+            <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+                {language === 'fr' ? 'Le Cours' : 'Lessons'}
+            </h2>
+            <p className="text-gray-500 font-medium">
+                {language === 'fr' ? 'Chapitre : Statistiques' : 'Chapter: Statistics'}
+            </p>
+        </div>
+      </div>
+      
       <div className="space-y-4">
         {lessons.map((lesson) => (
-          <div key={lesson.id} className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 transition-all">
+          <div key={lesson.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-md hover:border-blue-200 group">
             <button
               onClick={() => toggleLesson(lesson.id)}
-              className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 focus:outline-none"
+              className="w-full flex items-center justify-between p-6 text-left focus:outline-none"
             >
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">{lesson.title}</h3>
-                <p className="text-gray-500 text-sm mt-1">{lesson.description}</p>
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold transition-colors ${openLesson === lesson.id ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600 group-hover:bg-blue-100'}`}>
+                    {lesson.title.split('.')[0]}
+                </div>
+                <div>
+                  <h3 className={`text-lg font-bold transition-colors ${openLesson === lesson.id ? 'text-blue-700' : 'text-gray-800'}`}>{lesson.title.split('. ')[1]}</h3>
+                  <p className="text-gray-400 text-sm font-medium">{lesson.description}</p>
+                </div>
               </div>
-              {openLesson === lesson.id ? (
-                <ChevronDown className="text-indigo-600" />
-              ) : (
-                <ChevronRight className="text-gray-400" />
-              )}
+              <div className={`p-2 rounded-full transition-all ${openLesson === lesson.id ? 'bg-blue-50 text-blue-600 rotate-180' : 'text-gray-300'}`}>
+                <ChevronDown size={20} />
+              </div>
             </button>
             
             {openLesson === lesson.id && (
-              <div className="p-6 pt-0 border-t border-gray-100 bg-gray-50/50">
-                <div className="prose max-w-none mt-4">
-                  {lesson.content}
-                </div>
+              <div className="p-8 pt-2 animate-slide-down">
+                <div className="h-px bg-gray-100 w-full mb-6"></div>
+                {lesson.content}
               </div>
             )}
           </div>

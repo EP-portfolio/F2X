@@ -1,66 +1,94 @@
 import React from 'react';
-import { ViewState } from '../types';
+import { ViewState, Language } from '../types';
 import { BookOpen, Calculator, Bot, Home, ClipboardList } from 'lucide-react';
 
 interface NavBarProps {
   currentView: ViewState;
   onNavigate: (view: ViewState) => void;
+  language: Language;
 }
 
-export const NavBar: React.FC<NavBarProps> = ({ currentView, onNavigate }) => {
+export const NavBar: React.FC<NavBarProps> = ({ currentView, onNavigate, language }) => {
+  
+  const labels = {
+    fr: {
+      home: 'Accueil',
+      lesson: 'Cours',
+      practice: 'Entraînement',
+      assessment: 'Évaluation',
+      tutor: 'Tuteur IA'
+    },
+    en: {
+      home: 'Home',
+      lesson: 'Lessons',
+      practice: 'Practice',
+      assessment: 'Assessment',
+      tutor: 'AI Tutor'
+    }
+  };
+
+  const t = labels[language];
+
   const navItems = [
-    { view: ViewState.HOME, label: 'Accueil', icon: Home },
-    { view: ViewState.LESSON, label: 'Le Cours', icon: BookOpen },
-    { view: ViewState.PRACTICE, label: 'S\'entraîner', icon: Calculator },
-    { view: ViewState.ASSESSMENT, label: 'Évaluation', icon: ClipboardList },
-    { view: ViewState.TUTOR, label: 'Tuteur IA', icon: Bot },
+    { view: ViewState.HOME, label: t.home, icon: Home, color: 'text-violet-600', bg: 'bg-violet-50' },
+    { view: ViewState.LESSON, label: t.lesson, icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { view: ViewState.PRACTICE, label: t.practice, icon: Calculator, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { view: ViewState.ASSESSMENT, label: t.assessment, icon: ClipboardList, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { view: ViewState.TUTOR, label: t.tutor, icon: Bot, color: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
   ];
 
   return (
-    <nav className="bg-indigo-600 text-white shadow-lg sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex-shrink-0 font-bold text-xl flex items-center gap-2">
-            <span className="bg-white text-indigo-600 p-1 rounded">f(x)</span>
-            Stat'Master 3ème
+    <nav className="sticky top-4 z-50 px-4 mb-6">
+      <div className="max-w-5xl mx-auto bg-white/90 backdrop-blur-md shadow-lg rounded-full border border-white/50 px-6 py-3 flex justify-between items-center transition-all">
+        
+        {/* Logo */}
+        <div className="flex-shrink-0 font-extrabold text-xl flex items-center gap-2 text-gray-800 tracking-tight cursor-pointer" onClick={() => onNavigate(ViewState.HOME)}>
+          <div className="bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white w-8 h-8 rounded-lg flex items-center justify-center shadow-sm transform -rotate-3">
+            <span className="font-mono text-sm">fx</span>
           </div>
-          <div className="hidden md:flex space-x-4">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentView === item.view;
-              return (
-                <button
-                  key={item.view}
-                  onClick={() => onNavigate(item.view)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-indigo-700 text-white shadow-inner'
-                      : 'text-indigo-100 hover:bg-indigo-500 hover:text-white'
-                  }`}
-                >
-                  <Icon size={18} />
-                  {item.label}
-                </button>
-              );
-            })}
-          </div>
+          <span className="hidden sm:inline bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600">
+            Stat'Master
+          </span>
         </div>
-      </div>
-      {/* Mobile Menu Bar (Simplified for this demo) */}
-      <div className="md:hidden flex justify-around bg-indigo-700 p-2">
-         {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentView === item.view;
-              return (
-                <button
-                  key={item.view}
-                  onClick={() => onNavigate(item.view)}
-                  className={`p-2 rounded-md ${isActive ? 'bg-indigo-800' : ''}`}
-                >
-                  <Icon size={24} className="text-white" />
-                </button>
-              );
-            })}
+
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = currentView === item.view;
+            return (
+              <button
+                key={item.view}
+                onClick={() => onNavigate(item.view)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all duration-300 ${
+                  isActive
+                    ? `${item.bg} ${item.color} shadow-sm scale-105`
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <Icon size={18} className={isActive ? item.color : "text-gray-400"} />
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Mobile Nav Trigger (Simple Icon for now, could be expanded) */}
+        <div className="md:hidden flex gap-2">
+           {navItems.slice(1).map((item) => { // Skip Home on mobile bar to save space
+             const Icon = item.icon;
+             const isActive = currentView === item.view;
+             return (
+               <button 
+                 key={item.view} 
+                 onClick={() => onNavigate(item.view)}
+                 className={`p-2 rounded-full ${isActive ? item.bg + ' ' + item.color : 'text-gray-400'}`}
+               >
+                 <Icon size={20} />
+               </button>
+             )
+           })}
+        </div>
       </div>
     </nav>
   );

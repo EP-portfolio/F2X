@@ -1,5 +1,7 @@
 import React from 'react';
 
+export type Language = 'fr' | 'en';
+
 export enum ViewState {
   HOME = 'HOME',
   LESSON = 'LESSON',
