@@ -44,7 +44,7 @@ export const NavBar: React.FC<NavBarProps> = ({ currentView, onNavigate, languag
         {/* Logo */}
         <div className="flex-shrink-0 font-extrabold text-xl flex items-center gap-2 text-gray-800 tracking-tight cursor-pointer" onClick={() => onNavigate(ViewState.HOME)}>
           <div className="bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white w-8 h-8 rounded-lg flex items-center justify-center shadow-sm transform -rotate-3">
-            <span className="font-mono text-sm">fx</span>
+            <span className="font-mono text-xs font-bold">F2X</span>
           </div>
           <span className="hidden sm:inline bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-fuchsia-600">
             Stat'Master
