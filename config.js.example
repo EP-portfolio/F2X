@@ -1,0 +1,14 @@
+// Configuration de la clé API Gemini
+// 
+// INSTRUCTIONS :
+// 1. Copiez ce fichier en "config.js" (sans le .example)
+// 2. Remplacez 'VOTRE_CLE_API_ICI' par votre vraie clé API Gemini
+// 3. Le fichier config.js est dans .gitignore, il ne sera pas versionné
+//
+// Pour obtenir une clé API Gemini :
+// - Allez sur https://aistudio.google.com/app/apikey
+// - Créez une nouvelle clé API
+// - Copiez-la et collez-la ci-dessous
+
+window.API_KEY = 'VOTRE_CLE_API_ICI';
+

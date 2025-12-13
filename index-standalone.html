@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stat'Master 3ème</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Recharts not needed for standalone version, using SVG charts instead -->
+    <script src="https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@google/generative-ai@1.31.0/dist/index.umd.js"></script>
+    <script>
+      // Ensure html2canvas is loaded before modules
+      window.html2canvasReady = false;
+      if (typeof html2canvas !== 'undefined') {
+        window.html2canvasReady = true;
+      } else {
+        window.addEventListener('load', () => {
+          window.html2canvasReady = true;
+        });
+      }
+    </script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #fdfbf7 0%, #f3e8ff 100%);
+        min-height: 100vh;
+      }
+      .font-hand {
+        font-family: 'Patrick Hand', cursive;
+      }
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+      @keyframes fade-in {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in {
+        animation: fade-in 0.5s ease-out;
+      }
+      @keyframes slide-down {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-slide-down {
+        animation: slide-down 0.3s ease-out;
+      }
+      @keyframes slide-up {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-slide-up {
+        animation: slide-up 0.3s ease-out;
+      }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <!-- Configuration API -->
+    <!-- Option 1 : Définir directement ici (déconseillé pour la production) -->
+    <!-- <script>
+      window.API_KEY = 'votre_cle_api_gemini';
+      window.API_BASE_URL = 'http://localhost:3000/api';
+    </script> -->
+    
+    <!-- Option 2 : Utiliser un fichier config.js (recommandé) -->
+    <!-- Créez un fichier config.js à la racine avec :
+         window.API_KEY = 'votre_cle_gemini'; (optionnel, pour usage direct)
+         window.API_BASE_URL = 'http://localhost:3000/api';
+    -->
+    <script src="config.js" defer></script>
+    
+    <!-- Modules JS -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
+

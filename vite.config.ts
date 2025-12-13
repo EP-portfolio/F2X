@@ -3,5 +3,13 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
     plugins: [react()],
+    optimizeDeps: {
+        exclude: ['react', 'react-dom', 'lucide-react', 'recharts', '@google/genai', 'html2canvas']
+    },
+    server: {
+        fs: {
+            allow: ['..']
+        }
+    }
 });
 
