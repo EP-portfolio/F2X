@@ -42,7 +42,7 @@ EXAMPLE (Expected style):
 // Structure pour générer un prompt complet
 export function genererPromptEnonce(exercice: ExerciseData, lang: Language = 'fr') {
   if (lang === 'fr') {
-      const donneesExercice = `
+    const donneesExercice = `
 DONNÉES DE L'EXERCICE À CRÉER :
 - Thème : ${exercice.titre}
 - Valeurs du caractère : ${exercice.valeurs.join(', ')}
@@ -58,9 +58,9 @@ CONSIGNES POUR L'ÉNONCÉ :
 5. Ajoute 1 ou 2 questions d'interprétation.
 6. Ne donne PAS la correction.
 `;
-      return CONTEXTE_GENERATION_ENONCES_FR + donneesExercice;
+    return CONTEXTE_GENERATION_ENONCES_FR + donneesExercice;
   } else {
-      const donneesExercice = `
+    const donneesExercice = `
 EXERCISE DATA TO CREATE:
 - Topic: ${exercice.titre}
 - Values: ${exercice.valeurs.join(', ')}
@@ -76,7 +76,7 @@ INSTRUCTIONS FOR THE PROBLEM STATEMENT:
 5. Add 1 or 2 interpretation questions.
 6. Do NOT provide the solution.
 `;
-      return CONTEXTE_GENERATION_ENONCES_EN + donneesExercice;
+    return CONTEXTE_GENERATION_ENONCES_EN + donneesExercice;
   }
 }
 
@@ -101,6 +101,295 @@ GENERATE:
 2. Detailed calculations.
 3. Answers to questions.
 Language: English.
+`;
+  }
+}
+
+// ============================================================
+// PROMPTS D'ANALYSE AMÉLIORÉS POUR COMPUTER VISION
+// ============================================================
+
+interface AnalysisContext {
+  exerciseTitle: string;
+  exerciseProblem: string;
+  exerciseType: 'table' | 'frequency' | 'indicators' | 'problem';
+  rawData?: any;
+  language: Language;
+}
+
+export function genererPromptAnalyse(context: AnalysisContext): string {
+  const { exerciseTitle, exerciseProblem, exerciseType, rawData, language } = context;
+
+  if (language === 'fr') {
+    const basePrompt = `Tu es un professeur de mathématiques expert en correction de copies. Tu dois analyser une photo de devoir d'un élève de 3ème.
+
+EXERCICE À CORRIGER :
+- Titre : "${exerciseTitle}"
+- Consigne : "${exerciseProblem}"
+
+INSTRUCTIONS GÉNÉRALES D'ANALYSE :
+1. **Lecture attentive** : Examine minutieusement l'image. Détecte tous les textes, nombres, tableaux, calculs et graphiques présents.
+2. **OCR précis** : Transcrit fidèlement tous les nombres, opérations mathématiques et textes visibles, même s'ils sont écrits à la main.
+3. **Détection de structure** : Identifie les tableaux, colonnes, lignes, et leur organisation.
+4. **Analyse des calculs** : Vérifie chaque étape de calcul, les formules utilisées, et les résultats obtenus.
+5. **Tolérance** : Accepte les variations d'écriture manuscrite, les ratures, et les erreurs de formatage mineures.
+
+`;
+
+    let specificInstructions = '';
+
+    if (exerciseType === 'table') {
+      specificInstructions = `
+INSTRUCTIONS SPÉCIFIQUES - TABLEAU D'EFFECTIFS :
+1. **Vérification du tableau** :
+   - Identifie toutes les valeurs uniques présentes dans les données brutes
+   - Vérifie que chaque valeur apparaît une seule fois dans la colonne "Valeur"
+   - Compte les effectifs pour chaque valeur et vérifie que les totaux sont corrects
+   - Vérifie que la somme des effectifs correspond au total des données
+
+2. **Points à vérifier** :
+   - Toutes les valeurs sont-elles présentes ?
+   - Les effectifs sont-ils corrects ?
+   - Le total est-il correct ?
+   - Le tableau est-il bien formaté ?
+
+3. **Feedback** :
+   - Si correct : Félicite l'élève et confirme chaque point
+   - Si incorrect : Indique précisément quelles valeurs ou effectifs sont erronés, et explique comment les corriger
+`;
+
+      if (rawData) {
+        specificInstructions += `
+DONNÉES ATTENDUES (pour référence) :
+- Valeurs : ${rawData.valeurs?.join(', ') || 'N/A'}
+- Effectifs : ${rawData.effectifs?.join(', ') || 'N/A'}
+- Total : ${rawData.total || 'N/A'}
+`;
+      }
+    } else if (exerciseType === 'frequency') {
+      specificInstructions = `
+INSTRUCTIONS SPÉCIFIQUES - CALCUL DE FRÉQUENCES :
+1. **Vérification des fréquences** :
+   - Vérifie que les fréquences en fraction sont simplifiées au maximum
+   - Vérifie que les fréquences décimales respectent la précision demandée (${rawData?.arrondi?.texteEnonce || 'selon consigne'})
+   - Vérifie que les fréquences en pourcentage sont cohérentes avec les décimales
+   - Vérifie que la somme des fréquences décimales/pourcentages est égale à 1/100%
+
+2. **Calculs à vérifier** :
+   - Fréquence (fraction) = Effectif / Total
+   - Fréquence (décimal) = Arrondi(Effectif / Total, précision)
+   - Fréquence (%) = Arrondi((Effectif / Total) × 100, précision)
+
+3. **Points critiques** :
+   - Les arrondis sont-ils corrects selon la consigne ?
+   - Les conversions entre fraction, décimal et pourcentage sont-elles cohérentes ?
+   - La somme des fréquences est-elle égale à 1 (ou 100%) ?
+
+4. **Feedback** :
+   - Si correct : Valide chaque colonne et félicite
+   - Si incorrect : Indique précisément quelles fréquences sont fausses, montre le calcul correct, et explique l'erreur
+`;
+
+      if (rawData?.arrondi) {
+        specificInstructions += `
+PRÉCISION D'ARRONDI REQUISE : ${rawData.arrondi.texteConsigne}
+`;
+      }
+    } else if (exerciseType === 'indicators') {
+      specificInstructions = `
+INSTRUCTIONS SPÉCIFIQUES - INDICATEURS STATISTIQUES :
+1. **Vérification des calculs** :
+   - **Moyenne** : Vérifie que la formule (Somme des valeurs / Nombre de valeurs) est correctement appliquée
+   - **Médiane** : Vérifie que les données sont triées, puis que la valeur médiane est correctement identifiée
+   - **Q1 (Premier Quartile)** : Vérifie le calcul au rang N/4
+   - **Q3 (Troisième Quartile)** : Vérifie le calcul au rang 3N/4
+   - **Étendue** : Vérifie que c'est bien (Maximum - Minimum)
+   - **Écart interquartile** : Vérifie que c'est bien (Q3 - Q1)
+
+2. **Points à vérifier** :
+   - Les données sont-elles correctement triées pour la médiane et les quartiles ?
+   - Les formules sont-elles correctement appliquées ?
+   - Les résultats sont-ils arrondis correctement si nécessaire ?
+   - Tous les indicateurs demandés sont-ils présents ?
+
+3. **Feedback** :
+   - Si correct : Valide chaque indicateur et explique brièvement la méthode
+   - Si incorrect : Indique quel(s) indicateur(s) est/sont faux, montre le calcul étape par étape, et explique l'erreur
+`;
+
+      if (rawData) {
+        specificInstructions += `
+RÉSULTATS ATTENDUS (pour référence) :
+- Moyenne : ${rawData.mean || 'N/A'} ${rawData.unit || ''}
+- Médiane : ${rawData.median || 'N/A'} ${rawData.unit || ''}
+- Q1 : ${rawData.q1 || 'N/A'}
+- Q3 : ${rawData.q3 || 'N/A'}
+- Écart interquartile : ${rawData.iqr || 'N/A'}
+`;
+      }
+    } else if (exerciseType === 'problem') {
+      specificInstructions = `
+INSTRUCTIONS SPÉCIFIQUES - RÉSOLUTION DE PROBLÈME :
+1. **Analyse de la réponse** :
+   - Identifie la réponse finale de l'élève
+   - Vérifie si l'élève a choisi la bonne option (si applicable)
+   - Analyse le raisonnement et les justifications fournies
+
+2. **Vérification du raisonnement** :
+   - L'élève a-t-il utilisé les bons indicateurs statistiques ?
+   - Le raisonnement est-il logique et cohérent ?
+   - Les justifications sont-elles pertinentes ?
+
+3. **Feedback** :
+   - Si correct : Félicite et valide le raisonnement
+   - Si incorrect : Explique pourquoi la réponse est fausse, indique la bonne réponse, et guide l'élève vers le bon raisonnement
+`;
+    }
+
+    return basePrompt + specificInstructions + `
+
+FORMAT DE RÉPONSE ATTENDU :
+- Commence par un verdict clair : "✅ Correct" ou "❌ À corriger"
+- Liste les points vérifiés
+- Pour chaque erreur, explique clairement et propose la correction
+- Sois encourageant et pédagogique
+- Utilise des puces (*) pour structurer ta réponse
+`;
+  } else {
+    // English version
+    const basePrompt = `You are an expert math teacher specialized in grading student homework. You must analyze a photo of a 3rd grade student's work.
+
+EXERCISE TO GRADE :
+- Title : "${exerciseTitle}"
+- Instructions : "${exerciseProblem}"
+
+GENERAL ANALYSIS INSTRUCTIONS :
+1. **Careful reading** : Examine the image meticulously. Detect all texts, numbers, tables, calculations, and graphs present.
+2. **Precise OCR** : Faithfully transcribe all numbers, mathematical operations, and visible texts, even if handwritten.
+3. **Structure detection** : Identify tables, columns, rows, and their organization.
+4. **Calculation analysis** : Verify each calculation step, formulas used, and results obtained.
+5. **Tolerance** : Accept variations in handwriting, erasures, and minor formatting errors.
+
+`;
+
+    let specificInstructions = '';
+
+    if (exerciseType === 'table') {
+      specificInstructions = `
+SPECIFIC INSTRUCTIONS - FREQUENCY TABLE :
+1. **Table verification** :
+   - Identify all unique values present in the raw data
+   - Verify that each value appears only once in the "Value" column
+   - Count frequencies for each value and verify totals are correct
+   - Verify that the sum of frequencies matches the total data count
+
+2. **Points to check** :
+   - Are all values present?
+   - Are frequencies correct?
+   - Is the total correct?
+   - Is the table well formatted?
+
+3. **Feedback** :
+   - If correct : Congratulate the student and confirm each point
+   - If incorrect : Precisely indicate which values or frequencies are wrong, and explain how to correct them
+`;
+
+      if (rawData) {
+        specificInstructions += `
+EXPECTED DATA (for reference) :
+- Values : ${rawData.valeurs?.join(', ') || 'N/A'}
+- Frequencies : ${rawData.effectifs?.join(', ') || 'N/A'}
+- Total : ${rawData.total || 'N/A'}
+`;
+      }
+    } else if (exerciseType === 'frequency') {
+      specificInstructions = `
+SPECIFIC INSTRUCTIONS - RELATIVE FREQUENCY CALCULATION :
+1. **Frequency verification** :
+   - Verify that fraction frequencies are maximally simplified
+   - Verify that decimal frequencies respect the required precision (${rawData?.arrondi?.texteEnonce || 'as per instructions'})
+   - Verify that percentage frequencies are consistent with decimals
+   - Verify that the sum of decimal/percentage frequencies equals 1/100%
+
+2. **Calculations to verify** :
+   - Frequency (fraction) = Count / Total
+   - Frequency (decimal) = Round(Count / Total, precision)
+   - Frequency (%) = Round((Count / Total) × 100, precision)
+
+3. **Critical points** :
+   - Are rounding correct according to instructions?
+   - Are conversions between fraction, decimal, and percentage consistent?
+   - Does the sum of frequencies equal 1 (or 100%)?
+
+4. **Feedback** :
+   - If correct : Validate each column and congratulate
+   - If incorrect : Precisely indicate which frequencies are wrong, show the correct calculation, and explain the error
+`;
+
+      if (rawData?.arrondi) {
+        specificInstructions += `
+REQUIRED ROUNDING PRECISION : ${rawData.arrondi.texteConsigne}
+`;
+      }
+    } else if (exerciseType === 'indicators') {
+      specificInstructions = `
+SPECIFIC INSTRUCTIONS - STATISTICAL INDICATORS :
+1. **Calculation verification** :
+   - **Mean** : Verify that the formula (Sum of values / Number of values) is correctly applied
+   - **Median** : Verify that data is sorted, then that the median value is correctly identified
+   - **Q1 (First Quartile)** : Verify calculation at rank N/4
+   - **Q3 (Third Quartile)** : Verify calculation at rank 3N/4
+   - **Range** : Verify that it's (Maximum - Minimum)
+   - **Interquartile Range** : Verify that it's (Q3 - Q1)
+
+2. **Points to check** :
+   - Is data correctly sorted for median and quartiles?
+   - Are formulas correctly applied?
+   - Are results correctly rounded if necessary?
+   - Are all requested indicators present?
+
+3. **Feedback** :
+   - If correct : Validate each indicator and briefly explain the method
+   - If incorrect : Indicate which indicator(s) is/are wrong, show the calculation step by step, and explain the error
+`;
+
+      if (rawData) {
+        specificInstructions += `
+EXPECTED RESULTS (for reference) :
+- Mean : ${rawData.mean || 'N/A'} ${rawData.unit || ''}
+- Median : ${rawData.median || 'N/A'} ${rawData.unit || ''}
+- Q1 : ${rawData.q1 || 'N/A'}
+- Q3 : ${rawData.q3 || 'N/A'}
+- Interquartile Range : ${rawData.iqr || 'N/A'}
+`;
+      }
+    } else if (exerciseType === 'problem') {
+      specificInstructions = `
+SPECIFIC INSTRUCTIONS - PROBLEM SOLVING :
+1. **Answer analysis** :
+   - Identify the student's final answer
+   - Verify if the student chose the correct option (if applicable)
+   - Analyze the reasoning and justifications provided
+
+2. **Reasoning verification** :
+   - Did the student use the correct statistical indicators?
+   - Is the reasoning logical and coherent?
+   - Are justifications relevant?
+
+3. **Feedback** :
+   - If correct : Congratulate and validate the reasoning
+   - If incorrect : Explain why the answer is wrong, indicate the correct answer, and guide the student toward correct reasoning
+`;
+    }
+
+    return basePrompt + specificInstructions + `
+
+EXPECTED RESPONSE FORMAT :
+- Start with a clear verdict : "✅ Correct" or "❌ Needs correction"
+- List checked points
+- For each error, explain clearly and propose the correction
+- Be encouraging and pedagogical
+- Use bullets (*) to structure your response
 `;
   }
 }
