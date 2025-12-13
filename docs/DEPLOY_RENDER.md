@@ -45,8 +45,9 @@ git push -u origin main
 5. **Configurez le service** :
    - **Name** : `statmaster-backend`
    - **Environment** : `Node`
-   - **Build Command** : `cd backend && npm install`
-   - **Start Command** : `cd backend && node server.js`
+   - **Root Directory** : `backend` ⚠️ **IMPORTANT - C'est la clé !**
+   - **Build Command** : `npm install`
+   - **Start Command** : `node server.js`
    - **Plan** : `Free`
 
 6. **Ajoutez les variables d'environnement** :
