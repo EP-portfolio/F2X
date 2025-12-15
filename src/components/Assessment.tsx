@@ -85,7 +85,8 @@ const generateNotebookImage = async (exercise: ExerciseStep, language: Language)
         const freq = exercise.rawData.frequences[idx];
         const td3 = document.createElement('td'); td3.textContent = freq.fraction;
         const td4 = document.createElement('td'); td4.textContent = freq.decimalFormate;
-        const td5 = document.createElement('td'); td5.textContent = `${freq.pourcentageFormate}%`;
+        const pctRounded = Math.round(parseFloat(freq.pourcentageFormate));
+        const td5 = document.createElement('td'); td5.textContent = `${isFinite(pctRounded) ? pctRounded : freq.pourcentageFormate}%`;
         [td3, td4, td5].forEach(td => {
           Object.assign(td.style, { border: '2px solid #1a237e', padding: '8px', textAlign: 'center', color: '#1a237e', fontFamily: '"Patrick Hand", cursive' });
           tr.appendChild(td);
