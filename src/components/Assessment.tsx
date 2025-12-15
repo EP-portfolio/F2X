@@ -235,7 +235,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
   const [parentEmail, setParentEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
   const [answerModes, setAnswerModes] = useState<Record<number, 'photo' | 'manual'>>({});
-  const [tableInputs, setTableInputs] = useState<Record<number, { effectifs: string[]; freqDec: string[]; freqPct: string[] }>>({});
+  const [tableInputs, setTableInputs] = useState<Record<number, { effectifs: string[]; freqFrac: string[]; freqDec: string[]; freqPct: string[] }>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { generateRandomExercises(); }, [language]);
@@ -271,6 +271,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
       initialModes[ex.id] = 'photo';
       initialInputs[ex.id] = {
         effectifs: new Array(ex.rawData?.valeurs?.length || 0).fill(''),
+        freqFrac: new Array(ex.rawData?.valeurs?.length || 0).fill(''),
         freqDec: new Array(ex.rawData?.valeurs?.length || 0).fill(''),
         freqPct: new Array(ex.rawData?.valeurs?.length || 0).fill(''),
       };
@@ -480,9 +481,9 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
     setAnswerModes(prev => ({ ...prev, [exId]: mode }));
   };
 
-  const handleInputChange = (exId: number, type: 'effectifs' | 'freqDec' | 'freqPct', idx: number, value: string) => {
+  const handleInputChange = (exId: number, type: 'effectifs' | 'freqFrac' | 'freqDec' | 'freqPct', idx: number, value: string) => {
     setTableInputs(prev => {
-      const current = prev[exId] || { effectifs: [], freqDec: [], freqPct: [] };
+      const current = prev[exId] || { effectifs: [], freqFrac: [], freqDec: [], freqPct: [] };
       const updated = { ...current, [type]: [...current[type]] };
       updated[type][idx] = value;
       return { ...prev, [exId]: updated };
@@ -514,13 +515,28 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
       });
     }
 
+    const parseFraction = (input: string) => {
+      const parts = input.split('/').map(p => p.trim());
+      if (parts.length !== 2) return NaN;
+      const num = parseFloat(parts[0]);
+      const den = parseFloat(parts[1]);
+      if (!isFinite(num) || !isFinite(den) || den === 0) return NaN;
+      return num / den;
+    };
+
     // Frequencies
     if (exercise.type === 'frequency') {
       expected.frequences.forEach((freq: any, idx: number) => {
+        const fracInput = inputs.freqFrac[idx]?.trim();
+        const fracVal = fracInput ? parseFraction(fracInput) : NaN;
         const dec = parseFloat(inputs.freqDec[idx]?.replace(',', '.'));
         const pct = parseFloat(inputs.freqPct[idx]?.replace(',', '.'));
-        const decOk = Math.abs(dec - parseFloat(freq.decimalFormate)) <= 0.01;
-        const pctOk = Math.abs(pct - parseFloat(freq.pourcentageFormate)) <= 1;
+        const expectedDec = parseFloat(freq.decimalFormate);
+        const expectedPct = parseFloat(freq.pourcentageFormate);
+        const fracOk = !isNaN(fracVal) && Math.abs(fracVal - expectedDec) <= 0.01;
+        const decOk = isFinite(dec) && Math.abs(dec - expectedDec) <= 0.01;
+        const pctOk = isFinite(pct) && Math.abs(pct - expectedPct) <= 1;
+        if (!fracOk) errors.push(language === 'fr' ? `Fréq fraction de ${expected.valeurs[idx]} attendue ≈ ${freq.fraction} (accepte non réduites)` : `Fraction freq for ${expected.valeurs[idx]} should match ≈ ${freq.fraction} (unreduced accepted)`);
         if (!decOk) errors.push(language === 'fr' ? `Fréq décimale de ${expected.valeurs[idx]} attendue ≈ ${freq.decimalFormate}` : `Decimal freq for ${expected.valeurs[idx]} should be ≈ ${freq.decimalFormate}`);
         if (!pctOk) errors.push(language === 'fr' ? `Fréq % de ${expected.valeurs[idx]} attendue ≈ ${freq.pourcentageFormate}` : `Percent freq for ${expected.valeurs[idx]} should be ≈ ${freq.pourcentageFormate}`);
       });
@@ -755,7 +771,15 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
                               </td>
                               {currentExercise.type === 'frequency' && (
                                 <>
-                                  <td className="p-2 border text-gray-700 font-semibold">{currentExercise.rawData?.frequences[idx]?.fraction}</td>
+                                  <td className="p-2 border">
+                                    <input
+                                      type="text"
+                                      className="w-28 px-2 py-1 border rounded-lg text-center"
+                                      placeholder="5/20"
+                                      value={tableInputs[currentExercise.id]?.freqFrac[idx] || ''}
+                                      onChange={(e) => handleInputChange(currentExercise.id, 'freqFrac', idx, e.target.value)}
+                                    />
+                                  </td>
                                   <td className="p-2 border">
                                     <input
                                       type="text"
