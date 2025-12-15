@@ -736,7 +736,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
                           <tr className="text-emerald-800">
                             <th className="p-2">{currentExercise.rawData?.label || 'Valeur'}</th>
                             <th className="p-2">{language === 'fr' ? 'Effectif' : 'Count'}</th>
-                            {currentExercise.type === 'frequency' && (<><th className="p-2">Fréq (Déc)</th><th className="p-2">Fréq (%)</th></>)}
+                            {currentExercise.type === 'frequency' && (<><th className="p-2">Fréq (Frac)</th><th className="p-2">Fréq (Déc)</th><th className="p-2">Fréq (%)</th></>)}
                           </tr>
                         </thead>
                         <tbody>
@@ -747,12 +747,15 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
                                 <input
                                   type="number"
                                   className="w-24 px-2 py-1 border rounded-lg text-center"
-                                  value={tableInputs[currentExercise.id]?.effectifs[idx] || ''}
+                                  value={currentExercise.type === 'frequency' ? currentExercise.rawData?.effectifs[idx] : (tableInputs[currentExercise.id]?.effectifs[idx] || '')}
                                   onChange={(e) => handleInputChange(currentExercise.id, 'effectifs', idx, e.target.value)}
+                                  readOnly={currentExercise.type === 'frequency'}
+                                  disabled={currentExercise.type === 'frequency'}
                                 />
                               </td>
                               {currentExercise.type === 'frequency' && (
                                 <>
+                                  <td className="p-2 border text-gray-700 font-semibold">{currentExercise.rawData?.frequences[idx]?.fraction}</td>
                                   <td className="p-2 border">
                                     <input
                                       type="text"
