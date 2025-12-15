@@ -41,8 +41,8 @@ EXAMPLE (Expected style):
 
 // Structure pour générer un prompt complet
 export function genererPromptEnonce(exercice: ExerciseData, lang: Language = 'fr') {
-  if (lang === 'fr') {
-    const donneesExercice = `
+   if (lang === 'fr') {
+      const donneesExercice = `
 DONNÉES DE L'EXERCICE À CRÉER :
 - Thème : ${exercice.titre}
 - Valeurs du caractère : ${exercice.valeurs.join(', ')}
@@ -58,9 +58,9 @@ CONSIGNES POUR L'ÉNONCÉ :
 5. Ajoute 1 ou 2 questions d'interprétation.
 6. Ne donne PAS la correction.
 `;
-    return CONTEXTE_GENERATION_ENONCES_FR + donneesExercice;
-  } else {
-    const donneesExercice = `
+      return CONTEXTE_GENERATION_ENONCES_FR + donneesExercice;
+   } else {
+      const donneesExercice = `
 EXERCISE DATA TO CREATE:
 - Topic: ${exercice.titre}
 - Values: ${exercice.valeurs.join(', ')}
@@ -76,14 +76,14 @@ INSTRUCTIONS FOR THE PROBLEM STATEMENT:
 5. Add 1 or 2 interpretation questions.
 6. Do NOT provide the solution.
 `;
-    return CONTEXTE_GENERATION_ENONCES_EN + donneesExercice;
-  }
+      return CONTEXTE_GENERATION_ENONCES_EN + donneesExercice;
+   }
 }
 
 // Structure pour générer un prompt de correction
 export function genererPromptCorrection(exercice: ExerciseData, lang: Language = 'fr') {
-  if (lang === 'fr') {
-    return `
+   if (lang === 'fr') {
+      return `
 Tu dois générer la CORRECTION COMPLÈTE de cet exercice de statistiques.
 DONNÉES : Thème: ${exercice.titre}, Valeurs: ${exercice.valeurs.join(', ')}, Effectifs: ${exercice.effectifs.join(', ')}, Total: ${exercice.total}.
 GÉNÈRE :
@@ -92,8 +92,8 @@ GÉNÈRE :
 3. Les réponses aux questions.
 Langue : Français.
 `;
-  } else {
-    return `
+   } else {
+      return `
 You must generate the FULL SOLUTION for this statistics exercise.
 DATA: Topic: ${exercice.titre}, Values: ${exercice.valeurs.join(', ')}, Frequencies: ${exercice.effectifs.join(', ')}, Total: ${exercice.total}.
 GENERATE:
@@ -102,7 +102,7 @@ GENERATE:
 3. Answers to questions.
 Language: English.
 `;
-  }
+   }
 }
 
 // ============================================================
@@ -110,18 +110,18 @@ Language: English.
 // ============================================================
 
 interface AnalysisContext {
-  exerciseTitle: string;
-  exerciseProblem: string;
-  exerciseType: 'table' | 'frequency' | 'indicators' | 'problem';
-  rawData?: any;
-  language: Language;
+   exerciseTitle: string;
+   exerciseProblem: string;
+   exerciseType: 'table' | 'frequency' | 'indicators' | 'problem';
+   rawData?: any;
+   language: Language;
 }
 
 export function genererPromptAnalyse(context: AnalysisContext): string {
-  const { exerciseTitle, exerciseProblem, exerciseType, rawData, language } = context;
+   const { exerciseTitle, exerciseProblem, exerciseType, rawData, language } = context;
 
-  if (language === 'fr') {
-    const basePrompt = `Tu es un professeur de mathématiques expert en correction de copies. Tu dois analyser une photo de devoir d'un élève de 3ème.
+   if (language === 'fr') {
+      const basePrompt = `Tu es un professeur de mathématiques expert en correction de copies. Tu dois analyser une photo de devoir d'un élève de 3ème.
 
 EXERCICE À CORRIGER :
 - Titre : "${exerciseTitle}"
@@ -136,10 +136,10 @@ INSTRUCTIONS GÉNÉRALES D'ANALYSE :
 
 `;
 
-    let specificInstructions = '';
+      let specificInstructions = '';
 
-    if (exerciseType === 'table') {
-      specificInstructions = `
+      if (exerciseType === 'table') {
+         specificInstructions = `
 INSTRUCTIONS SPÉCIFIQUES - TABLEAU D'EFFECTIFS :
 1. **Vérification du tableau** :
    - Identifie toutes les valeurs uniques présentes dans les données brutes
@@ -158,44 +158,44 @@ INSTRUCTIONS SPÉCIFIQUES - TABLEAU D'EFFECTIFS :
    - Si incorrect : Indique précisément quelles valeurs ou effectifs sont erronés, et explique comment les corriger
 `;
 
-      if (rawData) {
-        specificInstructions += `
+         if (rawData) {
+            specificInstructions += `
 DONNÉES ATTENDUES (pour référence) :
 - Valeurs : ${rawData.valeurs?.join(', ') || 'N/A'}
 - Effectifs : ${rawData.effectifs?.join(', ') || 'N/A'}
 - Total : ${rawData.total || 'N/A'}
 `;
-      }
-    } else if (exerciseType === 'frequency') {
-      // Calculer les fréquences attendues avec les bons arrondis
-      let frequencesAttendues = '';
-      if (rawData?.valeurs && rawData?.effectifs && rawData?.total) {
-        frequencesAttendues = '\nFRÉQUENCES ATTENDUES (pour référence) :\n';
-        rawData.valeurs.forEach((val: number, idx: number) => {
-          const eff = rawData.effectifs[idx];
-          const decimalExact = eff / rawData.total;
-          // Arrondir au centième (2 décimales)
-          const decimalArrondi = Math.round(decimalExact * 100) / 100;
-          // Arrondir le pourcentage à l'unité
-          const pctRounded = Math.round(decimalExact * 100);
-          // Calculer la fraction simplifiée
-          const pgcd = (a: number, b: number): number => {
-            a = Math.abs(a);
-            b = Math.abs(b);
-            while (b !== 0) {
-              const t = b;
-              b = a % b;
-              a = t;
-            }
-            return a;
-          };
-          const diviseur = pgcd(eff, rawData.total);
-          const fraction = `${eff / diviseur}/${rawData.total / diviseur}`;
-          frequencesAttendues += `- Valeur ${val}: Fraction = ${fraction} (accepte non réduites), Décimal = ${decimalArrondi.toFixed(2).replace('.', ',')} (arrondi au centième), % = ${pctRounded}% (arrondi à l'unité)\n`;
-        });
-      }
+         }
+      } else if (exerciseType === 'frequency') {
+         // Calculer les fréquences attendues avec les bons arrondis
+         let frequencesAttendues = '';
+         if (rawData?.valeurs && rawData?.effectifs && rawData?.total) {
+            frequencesAttendues = '\nFRÉQUENCES ATTENDUES (pour référence) :\n';
+            rawData.valeurs.forEach((val: number, idx: number) => {
+               const eff = rawData.effectifs[idx];
+               const decimalExact = eff / rawData.total;
+               // Arrondir au centième (2 décimales)
+               const decimalArrondi = Math.round(decimalExact * 100) / 100;
+               // Arrondir le pourcentage à l'unité
+               const pctRounded = Math.round(decimalExact * 100);
+               // Calculer la fraction simplifiée
+               const pgcd = (a: number, b: number): number => {
+                  a = Math.abs(a);
+                  b = Math.abs(b);
+                  while (b !== 0) {
+                     const t = b;
+                     b = a % b;
+                     a = t;
+                  }
+                  return a;
+               };
+               const diviseur = pgcd(eff, rawData.total);
+               const fraction = `${eff / diviseur}/${rawData.total / diviseur}`;
+               frequencesAttendues += `- Valeur ${val}: Fraction = ${fraction} (accepte non réduites), Décimal = ${decimalArrondi.toFixed(2).replace('.', ',')} (arrondi au centième), % = ${pctRounded}% (arrondi à l'unité)\n`;
+            });
+         }
 
-      specificInstructions = `
+         specificInstructions = `
 INSTRUCTIONS SPÉCIFIQUES - CALCUL DE FRÉQUENCES :
 1. **Règles d'arrondi OBLIGATOIRES pour cet exercice** :
    - Fréquences décimales : TOUJOURS arrondies au CENTIÈME (2 décimales)
@@ -238,8 +238,8 @@ INSTRUCTIONS SPÉCIFIQUES - CALCUL DE FRÉQUENCES :
    - Si incorrect : Indique précisément quelles fréquences sont fausses, montre le calcul correct en COPIANT EXACTEMENT les valeurs des fréquences attendues ci-dessous (avec 2 décimales pour les décimales), et explique l'erreur
 ${frequencesAttendues}
 `;
-    } else if (exerciseType === 'indicators') {
-      specificInstructions = `
+      } else if (exerciseType === 'indicators') {
+         specificInstructions = `
 INSTRUCTIONS SPÉCIFIQUES - INDICATEURS STATISTIQUES :
 1. **Vérification des calculs** :
    - **Moyenne** : Vérifie que la formule (Somme des valeurs / Nombre de valeurs) est correctement appliquée
@@ -257,64 +257,89 @@ INSTRUCTIONS SPÉCIFIQUES - INDICATEURS STATISTIQUES :
 
 3. **Feedback OBLIGATOIRE - Explications de calcul détaillées** :
    - Tu DOIS inclure pour CHAQUE indicateur une explication complète du calcul étape par étape
+   - **ÉTAPE PRÉLIMINAIRE OBLIGATOIRE** : Commence TOUJOURS par rappeler qu'on réarrange la liste dans l'ordre croissant
+     Exemple : "Étape 1 : Réarranger la liste dans l'ordre croissant. Série triée : 12, 15, 18, 20, 22"
    - **Moyenne** : Montre la somme de toutes les valeurs, puis la division par le nombre de valeurs
-     Exemple : "Moyenne = (12 + 15 + 18 + 20 + 22) / 5 = 87 / 5 = 17,4"
-   - **Médiane** : Montre les données triées, puis identifie la valeur médiane (ou la moyenne des deux valeurs centrales si nombre pair)
-     Exemple : "Données triées : 12, 15, 18, 20, 22. Médiane = valeur au rang 3 = 18"
-   - **Q1** : Montre le rang (N/4) et la valeur correspondante
-     Exemple : "Q1 = valeur au rang 2 = 15"
-   - **Q3** : Montre le rang (3N/4) et la valeur correspondante
-     Exemple : "Q3 = valeur au rang 4 = 20"
+     Exemple : "1. Moyenne = (12 + 15 + 18 + 20 + 22) / 5 = 87 / 5 = 17,4"
+   - **Médiane** : 
+     * Si nombre impair : Montre le calcul du rang = (n + 1) / 2, puis la valeur au rang calculé
+       Exemple : "2. Médiane : Rang = (5 + 1) / 2 = 3. Médiane = valeur au rang 3 = 18"
+     * Si nombre pair : Montre le calcul du rang = n / 2, puis la moyenne des deux valeurs centrales
+       Exemple : "2. Médiane : Rang = 6 / 2 = 3 (nombre pair). Médiane = (valeur au rang 3 + valeur au rang 4) / 2 = (18 + 20) / 2 = 19"
+   - **Q1** : Montre TOUJOURS le calcul du rang = n / 4, puis la valeur correspondante
+     Exemple : "3. Q1 : Rang = 5 / 4 = 1,25 → rang 2. Q1 = valeur au rang 2 = 15"
+   - **Q3** : Montre TOUJOURS le calcul du rang = 3 × n / 4, puis la valeur correspondante
+     Exemple : "4. Q3 : Rang = 3 × 5 / 4 = 3,75 → rang 4. Q3 = valeur au rang 4 = 20"
    - **Écart interquartile** : Montre le calcul Q3 - Q1
-     Exemple : "Écart Inter-quartile = Q3 - Q1 = 20 - 15 = 5"
-   - Si correct : Valide chaque indicateur avec son explication de calcul complète
-   - Si incorrect : Indique quel(s) indicateur(s) est/sont faux, montre le calcul correct étape par étape avec toutes les étapes, et explique l'erreur
+     Exemple : "5. Écart Inter-quartile = Q3 - Q1 = 20 - 15 = 5"
+   - Si correct : Valide chaque indicateur avec son explication de calcul complète incluant TOUS les détails ci-dessus
+   - Si incorrect : Indique quel(s) indicateur(s) est/sont faux, montre le calcul correct étape par étape avec TOUTES les étapes (tri, calcul du rang, etc.), et explique l'erreur
 `;
 
-      if (rawData) {
-        const rawList = rawData.rawList || [];
-        const sortedData = rawList.length > 0 ? [...rawList].sort((a, b) => a - b) : [];
-        const n = sortedData.length;
-        const sum = sortedData.reduce((a, b) => a + b, 0);
-        
-        let meanExplanation = '';
-        let medianExplanation = '';
-        let q1Explanation = '';
-        let q3Explanation = '';
-        let iqrExplanation = '';
-        
-        if (n > 0) {
-          meanExplanation = `Moyenne = (${sortedData.join(' + ')}) / ${n} = ${sum} / ${n} = ${rawData.mean || 'N/A'} ${rawData.unit || ''}`;
-          
-          if (n % 2 === 0) {
-            const mid1 = sortedData[n / 2 - 1];
-            const mid2 = sortedData[n / 2];
-            medianExplanation = `Médiane = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${rawData.unit || ''}`;
-          } else {
-            const mid = sortedData[Math.floor(n / 2)];
-            medianExplanation = `Médiane = valeur au rang ${Math.floor(n / 2) + 1} = ${mid} ${rawData.unit || ''}`;
-          }
-          
-          const q1Index = Math.ceil(n / 4) - 1;
-          const q3Index = Math.ceil((3 * n) / 4) - 1;
-          q1Explanation = `Q1 = valeur au rang ${q1Index + 1} = ${rawData.q1 || 'N/A'}`;
-          q3Explanation = `Q3 = valeur au rang ${q3Index + 1} = ${rawData.q3 || 'N/A'}`;
-          iqrExplanation = `Écart Inter-quartile = Q3 - Q1 = ${rawData.q3 || 'N/A'} - ${rawData.q1 || 'N/A'} = ${rawData.iqr || 'N/A'}`;
-        }
-        
-        specificInstructions += `
-RÉSULTATS ATTENDUS AVEC EXPLICATIONS DE CALCUL (pour référence) :
+         if (rawData) {
+            const rawList = rawData.rawList || [];
+            const sortedData = rawList.length > 0 ? [...rawList].sort((a, b) => a - b) : [];
+            const n = sortedData.length;
+            const sum = sortedData.reduce((a, b) => a + b, 0);
+
+            let meanExplanation = '';
+            let medianExplanation = '';
+            let q1Explanation = '';
+            let q3Explanation = '';
+            let iqrExplanation = '';
+
+            if (n > 0) {
+               const sortReminder = `Étape 1 : Réarranger la liste dans l'ordre croissant\nSérie triée : ${sortedData.join(', ')}`;
+               
+               meanExplanation = `1. Moyenne = (${sortedData.join(' + ')}) / ${n} = ${sum} / ${n} = ${rawData.mean || 'N/A'} ${rawData.unit || ''}`;
+
+               if (n % 2 === 0) {
+                  const mid1 = sortedData[n / 2 - 1];
+                  const mid2 = sortedData[n / 2];
+                  medianExplanation = `2. Médiane : Rang = ${n} / 2 = ${n / 2} (nombre pair)\n   Médiane = (valeur au rang ${n / 2} + valeur au rang ${n / 2 + 1}) / 2\n   Médiane = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${rawData.unit || ''}`;
+               } else {
+                  const midRank = Math.floor(n / 2) + 1;
+                  const mid = sortedData[Math.floor(n / 2)];
+                  medianExplanation = `2. Médiane : Rang = (${n} + 1) / 2 = ${midRank}\n   Médiane = valeur au rang ${midRank} = ${mid} ${rawData.unit || ''}`;
+               }
+
+               const q1Index = Math.ceil(n / 4) - 1;
+               const q3Index = Math.ceil((3 * n) / 4) - 1;
+               const q1Rank = q1Index + 1;
+               const q3Rank = q3Index + 1;
+               q1Explanation = `3. Q1 : Rang = ${n} / 4 = ${n / 4} → rang ${q1Rank}\n   Q1 = valeur au rang ${q1Rank} = ${rawData.q1 || 'N/A'}`;
+               q3Explanation = `4. Q3 : Rang = 3 × ${n} / 4 = ${(3 * n) / 4} → rang ${q3Rank}\n   Q3 = valeur au rang ${q3Rank} = ${rawData.q3 || 'N/A'}`;
+               iqrExplanation = `5. Écart Inter-quartile = Q3 - Q1 = ${rawData.q3 || 'N/A'} - ${rawData.q1 || 'N/A'} = ${rawData.iqr || 'N/A'}`;
+               
+               specificInstructions += `
+RÉSULTATS ATTENDUS AVEC EXPLICATIONS DE CALCUL COMPLÈTES (pour référence) :
+${sortReminder}
 - ${meanExplanation || `Moyenne : ${rawData.mean || 'N/A'} ${rawData.unit || ''}`}
 - ${medianExplanation || `Médiane : ${rawData.median || 'N/A'} ${rawData.unit || ''}`}
 - ${q1Explanation || `Q1 : ${rawData.q1 || 'N/A'}`}
 - ${q3Explanation || `Q3 : ${rawData.q3 || 'N/A'}`}
 - ${iqrExplanation || `Écart interquartile : ${rawData.iqr || 'N/A'}`}
 
-IMPORTANT : Utilise ces explications de calcul comme modèle pour ton feedback. Tu DOIS montrer toutes les étapes de calcul pour chaque indicateur.
+IMPORTANT : Utilise EXACTEMENT ces explications de calcul comme modèle pour ton feedback. Tu DOIS inclure TOUS les détails :
+- Le rappel du réarrangement dans l'ordre croissant
+- Le calcul du rang pour la médiane (avec la formule selon pair/impair)
+- Le calcul du rang pour Q1 (n/4)
+- Le calcul du rang pour Q3 (3n/4)
+- Toutes les étapes de calcul pour chaque indicateur
 `;
-      }
-    } else if (exerciseType === 'problem') {
-      specificInstructions = `
+            } else {
+               specificInstructions += `
+RÉSULTATS ATTENDUS (pour référence) :
+- Moyenne : ${rawData.mean || 'N/A'} ${rawData.unit || ''}
+- Médiane : ${rawData.median || 'N/A'} ${rawData.unit || ''}
+- Q1 : ${rawData.q1 || 'N/A'}
+- Q3 : ${rawData.q3 || 'N/A'}
+- Écart interquartile : ${rawData.iqr || 'N/A'}
+`;
+            }
+         }
+      } else if (exerciseType === 'problem') {
+         specificInstructions = `
 INSTRUCTIONS SPÉCIFIQUES - RÉSOLUTION DE PROBLÈME :
 1. **Analyse de la réponse** :
    - Identifie la réponse finale de l'élève
@@ -330,9 +355,9 @@ INSTRUCTIONS SPÉCIFIQUES - RÉSOLUTION DE PROBLÈME :
    - Si correct : Félicite et valide le raisonnement
    - Si incorrect : Explique pourquoi la réponse est fausse, indique la bonne réponse, et guide l'élève vers le bon raisonnement
 `;
-    }
+      }
 
-    return basePrompt + specificInstructions + `
+      return basePrompt + specificInstructions + `
 
 FORMAT DE RÉPONSE ATTENDU :
 - Commence par un verdict clair : "✅ Correct" ou "❌ À corriger"
@@ -341,9 +366,9 @@ FORMAT DE RÉPONSE ATTENDU :
 - Sois encourageant et pédagogique
 - Utilise des puces (*) pour structurer ta réponse
 `;
-  } else {
-    // English version
-    const basePrompt = `You are an expert math teacher specialized in grading student homework. You must analyze a photo of a 3rd grade student's work.
+   } else {
+      // English version
+      const basePrompt = `You are an expert math teacher specialized in grading student homework. You must analyze a photo of a 3rd grade student's work.
 
 EXERCISE TO GRADE :
 - Title : "${exerciseTitle}"
@@ -358,10 +383,10 @@ GENERAL ANALYSIS INSTRUCTIONS :
 
 `;
 
-    let specificInstructions = '';
+      let specificInstructions = '';
 
-    if (exerciseType === 'table') {
-      specificInstructions = `
+      if (exerciseType === 'table') {
+         specificInstructions = `
 SPECIFIC INSTRUCTIONS - FREQUENCY TABLE :
 1. **Table verification** :
    - Identify all unique values present in the raw data
@@ -380,44 +405,44 @@ SPECIFIC INSTRUCTIONS - FREQUENCY TABLE :
    - If incorrect : Precisely indicate which values or frequencies are wrong, and explain how to correct them
 `;
 
-      if (rawData) {
-        specificInstructions += `
+         if (rawData) {
+            specificInstructions += `
 EXPECTED DATA (for reference) :
 - Values : ${rawData.valeurs?.join(', ') || 'N/A'}
 - Frequencies : ${rawData.effectifs?.join(', ') || 'N/A'}
 - Total : ${rawData.total || 'N/A'}
 `;
-      }
-    } else if (exerciseType === 'frequency') {
-      // Calculate expected frequencies with correct rounding
-      let frequencesAttendues = '';
-      if (rawData?.valeurs && rawData?.effectifs && rawData?.total) {
-        frequencesAttendues = '\nEXPECTED FREQUENCIES (for reference) :\n';
-        rawData.valeurs.forEach((val: number, idx: number) => {
-          const eff = rawData.effectifs[idx];
-          const decimalExact = eff / rawData.total;
-          // Round to hundredth (2 decimals)
-          const decimalArrondi = Math.round(decimalExact * 100) / 100;
-          // Round percentage to unit
-          const pctRounded = Math.round(decimalExact * 100);
-          // Calculate simplified fraction
-          const pgcd = (a: number, b: number): number => {
-            a = Math.abs(a);
-            b = Math.abs(b);
-            while (b !== 0) {
-              const t = b;
-              b = a % b;
-              a = t;
-            }
-            return a;
-          };
-          const diviseur = pgcd(eff, rawData.total);
-          const fraction = `${eff / diviseur}/${rawData.total / diviseur}`;
-          frequencesAttendues += `- Value ${val}: Fraction = ${fraction} (non-reduced accepted), Decimal = ${decimalArrondi.toFixed(2)} (rounded to hundredth), % = ${pctRounded}% (rounded to unit)\n`;
-        });
-      }
+         }
+      } else if (exerciseType === 'frequency') {
+         // Calculate expected frequencies with correct rounding
+         let frequencesAttendues = '';
+         if (rawData?.valeurs && rawData?.effectifs && rawData?.total) {
+            frequencesAttendues = '\nEXPECTED FREQUENCIES (for reference) :\n';
+            rawData.valeurs.forEach((val: number, idx: number) => {
+               const eff = rawData.effectifs[idx];
+               const decimalExact = eff / rawData.total;
+               // Round to hundredth (2 decimals)
+               const decimalArrondi = Math.round(decimalExact * 100) / 100;
+               // Round percentage to unit
+               const pctRounded = Math.round(decimalExact * 100);
+               // Calculate simplified fraction
+               const pgcd = (a: number, b: number): number => {
+                  a = Math.abs(a);
+                  b = Math.abs(b);
+                  while (b !== 0) {
+                     const t = b;
+                     b = a % b;
+                     a = t;
+                  }
+                  return a;
+               };
+               const diviseur = pgcd(eff, rawData.total);
+               const fraction = `${eff / diviseur}/${rawData.total / diviseur}`;
+               frequencesAttendues += `- Value ${val}: Fraction = ${fraction} (non-reduced accepted), Decimal = ${decimalArrondi.toFixed(2)} (rounded to hundredth), % = ${pctRounded}% (rounded to unit)\n`;
+            });
+         }
 
-      specificInstructions = `
+         specificInstructions = `
 SPECIFIC INSTRUCTIONS - RELATIVE FREQUENCY CALCULATION :
 1. **MANDATORY rounding rules for this exercise** :
    - Decimal frequencies : ALWAYS rounded to the HUNDREDTH (2 decimals)
@@ -460,8 +485,8 @@ SPECIFIC INSTRUCTIONS - RELATIVE FREQUENCY CALCULATION :
    - If incorrect : Precisely indicate which frequencies are wrong, show the correct calculation by COPYING EXACTLY the values from the expected frequencies below (with 2 decimals for decimals), and explain the error
 ${frequencesAttendues}
 `;
-    } else if (exerciseType === 'indicators') {
-      specificInstructions = `
+      } else if (exerciseType === 'indicators') {
+         specificInstructions = `
 SPECIFIC INSTRUCTIONS - STATISTICAL INDICATORS :
 1. **Calculation verification** :
    - **Mean** : Verify that the formula (Sum of values / Number of values) is correctly applied
@@ -479,64 +504,89 @@ SPECIFIC INSTRUCTIONS - STATISTICAL INDICATORS :
 
 3. **MANDATORY Feedback - Detailed calculation explanations** :
    - You MUST include for EACH indicator a complete step-by-step calculation explanation
+   - **MANDATORY PRELIMINARY STEP** : ALWAYS start by reminding that we rearrange the list in ascending order
+     Example : "Step 1: Rearrange the list in ascending order. Sorted series: 12, 15, 18, 20, 22"
    - **Mean** : Show the sum of all values, then the division by the number of values
-     Example : "Mean = (12 + 15 + 18 + 20 + 22) / 5 = 87 / 5 = 17.4"
-   - **Median** : Show the sorted data, then identify the median value (or the average of the two central values if even number)
-     Example : "Sorted data : 12, 15, 18, 20, 22. Median = value at rank 3 = 18"
-   - **Q1** : Show the rank (N/4) and the corresponding value
-     Example : "Q1 = value at rank 2 = 15"
-   - **Q3** : Show the rank (3N/4) and the corresponding value
-     Example : "Q3 = value at rank 4 = 20"
+     Example : "1. Mean = (12 + 15 + 18 + 20 + 22) / 5 = 87 / 5 = 17.4"
+   - **Median** : 
+     * If odd number : Show the rank calculation = (n + 1) / 2, then the value at the calculated rank
+       Example : "2. Median: Rank = (5 + 1) / 2 = 3. Median = value at rank 3 = 18"
+     * If even number : Show the rank calculation = n / 2, then the average of the two central values
+       Example : "2. Median: Rank = 6 / 2 = 3 (even number). Median = (value at rank 3 + value at rank 4) / 2 = (18 + 20) / 2 = 19"
+   - **Q1** : ALWAYS show the rank calculation = n / 4, then the corresponding value
+     Example : "3. Q1: Rank = 5 / 4 = 1.25 → rank 2. Q1 = value at rank 2 = 15"
+   - **Q3** : ALWAYS show the rank calculation = 3 × n / 4, then the corresponding value
+     Example : "4. Q3: Rank = 3 × 5 / 4 = 3.75 → rank 4. Q3 = value at rank 4 = 20"
    - **Interquartile Range** : Show the calculation Q3 - Q1
-     Example : "Interquartile Range = Q3 - Q1 = 20 - 15 = 5"
-   - If correct : Validate each indicator with its complete calculation explanation
-   - If incorrect : Indicate which indicator(s) is/are wrong, show the correct calculation step by step with all steps, and explain the error
+     Example : "5. Interquartile Range = Q3 - Q1 = 20 - 15 = 5"
+   - If correct : Validate each indicator with its complete calculation explanation including ALL the details above
+   - If incorrect : Indicate which indicator(s) is/are wrong, show the correct calculation step by step with ALL steps (sorting, rank calculation, etc.), and explain the error
 `;
 
-      if (rawData) {
-        const rawList = rawData.rawList || [];
-        const sortedData = rawList.length > 0 ? [...rawList].sort((a, b) => a - b) : [];
-        const n = sortedData.length;
-        const sum = sortedData.reduce((a, b) => a + b, 0);
-        
-        let meanExplanation = '';
-        let medianExplanation = '';
-        let q1Explanation = '';
-        let q3Explanation = '';
-        let iqrExplanation = '';
-        
-        if (n > 0) {
-          meanExplanation = `Mean = (${sortedData.join(' + ')}) / ${n} = ${sum} / ${n} = ${rawData.mean || 'N/A'} ${rawData.unit || ''}`;
-          
-          if (n % 2 === 0) {
-            const mid1 = sortedData[n / 2 - 1];
-            const mid2 = sortedData[n / 2];
-            medianExplanation = `Median = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${rawData.unit || ''}`;
-          } else {
-            const mid = sortedData[Math.floor(n / 2)];
-            medianExplanation = `Median = value at rank ${Math.floor(n / 2) + 1} = ${mid} ${rawData.unit || ''}`;
-          }
-          
-          const q1Index = Math.ceil(n / 4) - 1;
-          const q3Index = Math.ceil((3 * n) / 4) - 1;
-          q1Explanation = `Q1 = value at rank ${q1Index + 1} = ${rawData.q1 || 'N/A'}`;
-          q3Explanation = `Q3 = value at rank ${q3Index + 1} = ${rawData.q3 || 'N/A'}`;
-          iqrExplanation = `Interquartile Range = Q3 - Q1 = ${rawData.q3 || 'N/A'} - ${rawData.q1 || 'N/A'} = ${rawData.iqr || 'N/A'}`;
-        }
-        
-        specificInstructions += `
-EXPECTED RESULTS WITH CALCULATION EXPLANATIONS (for reference) :
+         if (rawData) {
+            const rawList = rawData.rawList || [];
+            const sortedData = rawList.length > 0 ? [...rawList].sort((a, b) => a - b) : [];
+            const n = sortedData.length;
+            const sum = sortedData.reduce((a, b) => a + b, 0);
+
+            let meanExplanation = '';
+            let medianExplanation = '';
+            let q1Explanation = '';
+            let q3Explanation = '';
+            let iqrExplanation = '';
+
+            if (n > 0) {
+               const sortReminder = `Step 1: Rearrange the list in ascending order\nSorted series: ${sortedData.join(', ')}`;
+               
+               meanExplanation = `1. Mean = (${sortedData.join(' + ')}) / ${n} = ${sum} / ${n} = ${rawData.mean || 'N/A'} ${rawData.unit || ''}`;
+
+               if (n % 2 === 0) {
+                  const mid1 = sortedData[n / 2 - 1];
+                  const mid2 = sortedData[n / 2];
+                  medianExplanation = `2. Median: Rank = ${n} / 2 = ${n / 2} (even number)\n   Median = (value at rank ${n / 2} + value at rank ${n / 2 + 1}) / 2\n   Median = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${rawData.unit || ''}`;
+               } else {
+                  const midRank = Math.floor(n / 2) + 1;
+                  const mid = sortedData[Math.floor(n / 2)];
+                  medianExplanation = `2. Median: Rank = (${n} + 1) / 2 = ${midRank}\n   Median = value at rank ${midRank} = ${mid} ${rawData.unit || ''}`;
+               }
+
+               const q1Index = Math.ceil(n / 4) - 1;
+               const q3Index = Math.ceil((3 * n) / 4) - 1;
+               const q1Rank = q1Index + 1;
+               const q3Rank = q3Index + 1;
+               q1Explanation = `3. Q1: Rank = ${n} / 4 = ${n / 4} → rank ${q1Rank}\n   Q1 = value at rank ${q1Rank} = ${rawData.q1 || 'N/A'}`;
+               q3Explanation = `4. Q3: Rank = 3 × ${n} / 4 = ${(3 * n) / 4} → rank ${q3Rank}\n   Q3 = value at rank ${q3Rank} = ${rawData.q3 || 'N/A'}`;
+               iqrExplanation = `5. Interquartile Range = Q3 - Q1 = ${rawData.q3 || 'N/A'} - ${rawData.q1 || 'N/A'} = ${rawData.iqr || 'N/A'}`;
+               
+               specificInstructions += `
+EXPECTED RESULTS WITH COMPLETE CALCULATION EXPLANATIONS (for reference) :
+${sortReminder}
 - ${meanExplanation || `Mean : ${rawData.mean || 'N/A'} ${rawData.unit || ''}`}
 - ${medianExplanation || `Median : ${rawData.median || 'N/A'} ${rawData.unit || ''}`}
 - ${q1Explanation || `Q1 : ${rawData.q1 || 'N/A'}`}
 - ${q3Explanation || `Q3 : ${rawData.q3 || 'N/A'}`}
 - ${iqrExplanation || `Interquartile Range : ${rawData.iqr || 'N/A'}`}
 
-IMPORTANT : Use these calculation explanations as a model for your feedback. You MUST show all calculation steps for each indicator.
+IMPORTANT : Use EXACTLY these calculation explanations as a model for your feedback. You MUST include ALL details :
+- The reminder to rearrange in ascending order
+- The rank calculation for median (with the formula according to even/odd)
+- The rank calculation for Q1 (n/4)
+- The rank calculation for Q3 (3n/4)
+- All calculation steps for each indicator
 `;
-      }
-    } else if (exerciseType === 'problem') {
-      specificInstructions = `
+            } else {
+               specificInstructions += `
+EXPECTED RESULTS (for reference) :
+- Mean : ${rawData.mean || 'N/A'} ${rawData.unit || ''}
+- Median : ${rawData.median || 'N/A'} ${rawData.unit || ''}
+- Q1 : ${rawData.q1 || 'N/A'}
+- Q3 : ${rawData.q3 || 'N/A'}
+- Interquartile Range : ${rawData.iqr || 'N/A'}
+`;
+            }
+         }
+      } else if (exerciseType === 'problem') {
+         specificInstructions = `
 SPECIFIC INSTRUCTIONS - PROBLEM SOLVING :
 1. **Answer analysis** :
    - Identify the student's final answer
@@ -552,9 +602,9 @@ SPECIFIC INSTRUCTIONS - PROBLEM SOLVING :
    - If correct : Congratulate and validate the reasoning
    - If incorrect : Explain why the answer is wrong, indicate the correct answer, and guide the student toward correct reasoning
 `;
-    }
+      }
 
-    return basePrompt + specificInstructions + `
+      return basePrompt + specificInstructions + `
 
 EXPECTED RESPONSE FORMAT :
 - Start with a clear verdict : "✅ Correct" or "❌ Needs correction"
@@ -563,5 +613,5 @@ EXPECTED RESPONSE FORMAT :
 - Be encouraging and pedagogical
 - Use bullets (*) to structure your response
 `;
-  }
+   }
 }

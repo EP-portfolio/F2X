@@ -122,48 +122,58 @@ const generateNotebookImage = async (exercise: ExerciseStep, language: Language)
     const n = sortedData.length;
     const sum = sortedData.reduce((a, b) => a + b, 0);
     
+    // Rappel : réarrangement dans l'ordre croissant
+    const sortReminder = language === 'fr'
+      ? `Étape 1 : Réarranger la liste dans l'ordre croissant\nSérie triée : ${sortedData.join(', ')}`
+      : `Step 1: Rearrange the list in ascending order\nSorted series: ${sortedData.join(', ')}`;
+    
     // Moyenne
     const meanExplanation = language === 'fr' 
       ? `1. Moyenne = (${sortedData.join(' + ')}) / ${n} = ${sum} / ${n} = ${mean} ${unit}`
       : `1. Mean = (${sortedData.join(' + ')}) / ${n} = ${sum} / ${n} = ${mean} ${unit}`;
     
-    // Médiane
+    // Médiane avec rappel du calcul du rang
     let medianExplanation = '';
     if (n % 2 === 0) {
       const mid1 = sortedData[n / 2 - 1];
       const mid2 = sortedData[n / 2];
       medianExplanation = language === 'fr'
-        ? `2. Médiane = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${unit}`
-        : `2. Median = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${unit}`;
+        ? `2. Médiane : Rang = ${n} / 2 = ${n / 2} (nombre pair)\n   Médiane = (valeur au rang ${n / 2} + valeur au rang ${n / 2 + 1}) / 2\n   Médiane = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${unit}`
+        : `2. Median: Rank = ${n} / 2 = ${n / 2} (even number)\n   Median = (value at rank ${n / 2} + value at rank ${n / 2 + 1}) / 2\n   Median = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${unit}`;
     } else {
+      const midRank = Math.floor(n / 2) + 1;
       const mid = sortedData[Math.floor(n / 2)];
       medianExplanation = language === 'fr'
-        ? `2. Médiane = valeur au rang ${Math.floor(n / 2) + 1} = ${mid} ${unit}`
-        : `2. Median = value at rank ${Math.floor(n / 2) + 1} = ${mid} ${unit}`;
+        ? `2. Médiane : Rang = (${n} + 1) / 2 = ${midRank}\n   Médiane = valeur au rang ${midRank} = ${mid} ${unit}`
+        : `2. Median: Rank = (${n} + 1) / 2 = ${midRank}\n   Median = value at rank ${midRank} = ${mid} ${unit}`;
     }
     
-    // Q1 et Q3
+    // Q1 avec rappel du calcul du rang
     const q1Index = Math.ceil(n / 4) - 1;
-    const q3Index = Math.ceil((3 * n) / 4) - 1;
+    const q1Rank = q1Index + 1;
     const q1Explanation = language === 'fr'
-      ? `3. Q1 = valeur au rang ${q1Index + 1} = ${q1}`
-      : `3. Q1 = value at rank ${q1Index + 1} = ${q1}`;
+      ? `3. Q1 : Rang = ${n} / 4 = ${n / 4} → rang ${q1Rank}\n   Q1 = valeur au rang ${q1Rank} = ${q1}`
+      : `3. Q1: Rank = ${n} / 4 = ${n / 4} → rank ${q1Rank}\n   Q1 = value at rank ${q1Rank} = ${q1}`;
+    
+    // Q3 avec rappel du calcul du rang
+    const q3Index = Math.ceil((3 * n) / 4) - 1;
+    const q3Rank = q3Index + 1;
     const q3Explanation = language === 'fr'
-      ? `   Q3 = valeur au rang ${q3Index + 1} = ${q3}`
-      : `   Q3 = value at rank ${q3Index + 1} = ${q3}`;
+      ? `4. Q3 : Rang = 3 × ${n} / 4 = ${(3 * n) / 4} → rang ${q3Rank}\n   Q3 = valeur au rang ${q3Rank} = ${q3}`
+      : `4. Q3: Rank = 3 × ${n} / 4 = ${(3 * n) / 4} → rank ${q3Rank}\n   Q3 = value at rank ${q3Rank} = ${q3}`;
     
     // Écart interquartile
     const iqrExplanation = language === 'fr'
-      ? `4. Écart Inter-quartile = Q3 - Q1 = ${q3} - ${q1} = ${iqr}`
-      : `4. Interquartile Range = Q3 - Q1 = ${q3} - ${q1} = ${iqr}`;
+      ? `5. Écart Inter-quartile = Q3 - Q1 = ${q3} - ${q1} = ${iqr}`
+      : `5. Interquartile Range = Q3 - Q1 = ${q3} - ${q1} = ${iqr}`;
     
-    const lines = [meanExplanation, medianExplanation, q1Explanation, q3Explanation, iqrExplanation];
+    const lines = [sortReminder, meanExplanation, medianExplanation, q1Explanation, q3Explanation, iqrExplanation];
     const ul = document.createElement('div');
     Object.assign(ul.style, { display: 'flex', flexDirection: 'column', gap: '20px', color: '#1a237e' });
     lines.forEach(line => { 
       const div = document.createElement('div'); 
       div.textContent = line; 
-      Object.assign(div.style, { fontSize: '22px', lineHeight: '1.6' });
+      Object.assign(div.style, { fontSize: '22px', lineHeight: '1.6', whiteSpace: 'pre-line' });
       ul.appendChild(div); 
     });
     content.appendChild(ul);
