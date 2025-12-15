@@ -535,10 +535,12 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
         const expectedPct = parseFloat(freq.pourcentageFormate);
         const fracOk = !isNaN(fracVal) && Math.abs(fracVal - expectedDec) <= 0.01;
         const decOk = isFinite(dec) && Math.abs(dec - expectedDec) <= 0.01;
-        const pctOk = isFinite(pct) && Math.abs(pct - expectedPct) <= 1;
+        const pctRounded = Math.round(pct);
+        const expectedPctRounded = Math.round(expectedPct);
+        const pctOk = isFinite(pct) && Math.abs(pctRounded - expectedPctRounded) <= 0;
         if (!fracOk) errors.push(language === 'fr' ? `Fréq fraction de ${expected.valeurs[idx]} attendue ≈ ${freq.fraction} (accepte non réduites)` : `Fraction freq for ${expected.valeurs[idx]} should match ≈ ${freq.fraction} (unreduced accepted)`);
         if (!decOk) errors.push(language === 'fr' ? `Fréq décimale de ${expected.valeurs[idx]} attendue ≈ ${freq.decimalFormate}` : `Decimal freq for ${expected.valeurs[idx]} should be ≈ ${freq.decimalFormate}`);
-        if (!pctOk) errors.push(language === 'fr' ? `Fréq % de ${expected.valeurs[idx]} attendue ≈ ${freq.pourcentageFormate}` : `Percent freq for ${expected.valeurs[idx]} should be ≈ ${freq.pourcentageFormate}`);
+        if (!pctOk) errors.push(language === 'fr' ? `Fréq % de ${expected.valeurs[idx]} attendue (arrondie à l'unité) ≈ ${Math.round(expectedPct)}` : `Percent freq for ${expected.valeurs[idx]} should be rounded to unit ≈ ${Math.round(expectedPct)}`);
       });
     }
 
