@@ -263,11 +263,11 @@ INSTRUCTIONS SPÉCIFIQUES - INDICATEURS STATISTIQUES :
      Format EXACT : "Étape 1 : Réarranger la liste dans l'ordre croissant\nSérie triée : [liste triée]"
    - **Moyenne** : Montre la somme de toutes les valeurs, puis la division par le nombre de valeurs
      Format EXACT : "1. Moyenne = ([valeurs séparées par +]) / [n] = [somme] / [n] = [résultat] [unité]"
-   - **Médiane** : 
+   - **Médiane** : TOUJOURS utiliser la formule (n+1)/2 pour calculer le rang
      * Si nombre pair : Format EXACT sur plusieurs lignes :
-       "2. Médiane : Rang = [n] / 2 = [résultat] (nombre pair)\n   Médiane = (valeur au rang [n/2] + valeur au rang [n/2+1]) / 2\n   Médiane = ([val1] + [val2]) / 2 = [résultat] [unité]"
+       "2. Médiane : Rang = ([n] + 1) / 2 = [résultat décimal] (nombre pair)\n   Médiane = (valeur au rang [floor(rang)] + valeur au rang [ceil(rang)]) / 2\n   Médiane = ([val1] + [val2]) / 2 = [résultat] [unité]"
      * Si nombre impair : Format EXACT :
-       "2. Médiane : Rang = ([n] + 1) / 2 = [rang]\n   Médiane = valeur au rang [rang] = [valeur] [unité]"
+       "2. Médiane : Rang = ([n] + 1) / 2 = [rang entier]\n   Médiane = valeur au rang [rang] = [valeur] [unité]"
    - **Q1** : Format EXACT sur plusieurs lignes :
      "3. Q1 : Rang = [n] / 4 = [résultat] → rang [rang final]\n   Q1 = valeur au rang [rang final] = [valeur]"
    - **Q3** : Format EXACT sur plusieurs lignes :
@@ -295,14 +295,20 @@ INSTRUCTIONS SPÉCIFIQUES - INDICATEURS STATISTIQUES :
 
                meanExplanation = `1. Moyenne = (${sortedData.join(' + ')}) / ${n} = ${sum} / ${n} = ${rawData.mean || 'N/A'} ${rawData.unit || ''}`;
 
+               // Médiane : TOUJOURS utiliser (n+1)/2
+               const medianRank = (n + 1) / 2;
                if (n % 2 === 0) {
-                  const mid1 = sortedData[n / 2 - 1];
-                  const mid2 = sortedData[n / 2];
-                  medianExplanation = `2. Médiane : Rang = ${n} / 2 = ${n / 2} (nombre pair)\n   Médiane = (valeur au rang ${n / 2} + valeur au rang ${n / 2 + 1}) / 2\n   Médiane = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${rawData.unit || ''}`;
+                  // Nombre pair : (n+1)/2 donne un décimal, on prend la moyenne des deux valeurs autour
+                  const mid1 = sortedData[Math.floor(medianRank) - 1];
+                  const mid2 = sortedData[Math.floor(medianRank)];
+                  const rank1 = Math.floor(medianRank);
+                  const rank2 = Math.ceil(medianRank);
+                  medianExplanation = `2. Médiane : Rang = (${n} + 1) / 2 = ${medianRank} (nombre pair)\n   Médiane = (valeur au rang ${rank1} + valeur au rang ${rank2}) / 2\n   Médiane = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${rawData.unit || ''}`;
                } else {
-                  const midRank = Math.floor(n / 2) + 1;
-                  const mid = sortedData[Math.floor(n / 2)];
-                  medianExplanation = `2. Médiane : Rang = (${n} + 1) / 2 = ${midRank}\n   Médiane = valeur au rang ${midRank} = ${mid} ${rawData.unit || ''}`;
+                  // Nombre impair : (n+1)/2 donne un entier
+                  const midRankInt = Math.round(medianRank);
+                  const mid = sortedData[midRankInt - 1];
+                  medianExplanation = `2. Médiane : Rang = (${n} + 1) / 2 = ${midRankInt}\n   Médiane = valeur au rang ${midRankInt} = ${mid} ${rawData.unit || ''}`;
                }
 
                const q1Index = Math.ceil(n / 4) - 1;
@@ -514,11 +520,11 @@ SPECIFIC INSTRUCTIONS - STATISTICAL INDICATORS :
      EXACT Format : "Step 1: Rearrange the list in ascending order\nSorted series: [sorted list]"
    - **Mean** : Show the sum of all values, then the division by the number of values
      EXACT Format : "1. Mean = ([values separated by +]) / [n] = [sum] / [n] = [result] [unit]"
-   - **Median** : 
+   - **Median** : ALWAYS use the formula (n+1)/2 to calculate the rank
      * If even number : EXACT Format on multiple lines :
-       "2. Median: Rank = [n] / 2 = [result] (even number)\n   Median = (value at rank [n/2] + value at rank [n/2+1]) / 2\n   Median = ([val1] + [val2]) / 2 = [result] [unit]"
+       "2. Median: Rank = ([n] + 1) / 2 = [decimal result] (even number)\n   Median = (value at rank [floor(rank)] + value at rank [ceil(rank)]) / 2\n   Median = ([val1] + [val2]) / 2 = [result] [unit]"
      * If odd number : EXACT Format :
-       "2. Median: Rank = ([n] + 1) / 2 = [rank]\n   Median = value at rank [rank] = [value] [unit]"
+       "2. Median: Rank = ([n] + 1) / 2 = [integer rank]\n   Median = value at rank [rank] = [value] [unit]"
    - **Q1** : EXACT Format on multiple lines :
      "3. Q1: Rank = [n] / 4 = [result] → rank [final rank]\n   Q1 = value at rank [final rank] = [value]"
    - **Q3** : EXACT Format on multiple lines :
@@ -546,14 +552,20 @@ SPECIFIC INSTRUCTIONS - STATISTICAL INDICATORS :
 
                meanExplanation = `1. Mean = (${sortedData.join(' + ')}) / ${n} = ${sum} / ${n} = ${rawData.mean || 'N/A'} ${rawData.unit || ''}`;
 
+               // Median: ALWAYS use (n+1)/2
+               const medianRank = (n + 1) / 2;
                if (n % 2 === 0) {
-                  const mid1 = sortedData[n / 2 - 1];
-                  const mid2 = sortedData[n / 2];
-                  medianExplanation = `2. Median: Rank = ${n} / 2 = ${n / 2} (even number)\n   Median = (value at rank ${n / 2} + value at rank ${n / 2 + 1}) / 2\n   Median = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${rawData.unit || ''}`;
+                  // Even number: (n+1)/2 gives a decimal, take the average of the two values around
+                  const mid1 = sortedData[Math.floor(medianRank) - 1];
+                  const mid2 = sortedData[Math.floor(medianRank)];
+                  const rank1 = Math.floor(medianRank);
+                  const rank2 = Math.ceil(medianRank);
+                  medianExplanation = `2. Median: Rank = (${n} + 1) / 2 = ${medianRank} (even number)\n   Median = (value at rank ${rank1} + value at rank ${rank2}) / 2\n   Median = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${rawData.unit || ''}`;
                } else {
-                  const midRank = Math.floor(n / 2) + 1;
-                  const mid = sortedData[Math.floor(n / 2)];
-                  medianExplanation = `2. Median: Rank = (${n} + 1) / 2 = ${midRank}\n   Median = value at rank ${midRank} = ${mid} ${rawData.unit || ''}`;
+                  // Odd number: (n+1)/2 gives an integer
+                  const midRankInt = Math.round(medianRank);
+                  const mid = sortedData[midRankInt - 1];
+                  medianExplanation = `2. Median: Rank = (${n} + 1) / 2 = ${midRankInt}\n   Median = value at rank ${midRankInt} = ${mid} ${rawData.unit || ''}`;
                }
 
                const q1Index = Math.ceil(n / 4) - 1;

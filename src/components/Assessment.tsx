@@ -132,20 +132,25 @@ const generateNotebookImage = async (exercise: ExerciseStep, language: Language)
       ? `1. Moyenne = (${sortedData.join(' + ')}) / ${n} = ${sum} / ${n} = ${mean} ${unit}`
       : `1. Mean = (${sortedData.join(' + ')}) / ${n} = ${sum} / ${n} = ${mean} ${unit}`;
     
-    // Médiane avec rappel du calcul du rang
+    // Médiane avec rappel du calcul du rang - TOUJOURS utiliser (n+1)/2
     let medianExplanation = '';
+    const medianRank = (n + 1) / 2;
     if (n % 2 === 0) {
-      const mid1 = sortedData[n / 2 - 1];
-      const mid2 = sortedData[n / 2];
+      // Nombre pair : (n+1)/2 donne un décimal, on prend la moyenne des deux valeurs autour
+      const mid1 = sortedData[Math.floor(medianRank) - 1]; // rang Math.floor(medianRank)
+      const mid2 = sortedData[Math.floor(medianRank)]; // rang Math.ceil(medianRank)
+      const rank1 = Math.floor(medianRank);
+      const rank2 = Math.ceil(medianRank);
       medianExplanation = language === 'fr'
-        ? `2. Médiane : Rang = ${n} / 2 = ${n / 2} (nombre pair)\n   Médiane = (valeur au rang ${n / 2} + valeur au rang ${n / 2 + 1}) / 2\n   Médiane = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${unit}`
-        : `2. Median: Rank = ${n} / 2 = ${n / 2} (even number)\n   Median = (value at rank ${n / 2} + value at rank ${n / 2 + 1}) / 2\n   Median = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${unit}`;
+        ? `2. Médiane : Rang = (${n} + 1) / 2 = ${medianRank} (nombre pair)\n   Médiane = (valeur au rang ${rank1} + valeur au rang ${rank2}) / 2\n   Médiane = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${unit}`
+        : `2. Median: Rank = (${n} + 1) / 2 = ${medianRank} (even number)\n   Median = (value at rank ${rank1} + value at rank ${rank2}) / 2\n   Median = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${unit}`;
     } else {
-      const midRank = Math.floor(n / 2) + 1;
-      const mid = sortedData[Math.floor(n / 2)];
+      // Nombre impair : (n+1)/2 donne un entier
+      const midRankInt = Math.round(medianRank);
+      const mid = sortedData[midRankInt - 1];
       medianExplanation = language === 'fr'
-        ? `2. Médiane : Rang = (${n} + 1) / 2 = ${midRank}\n   Médiane = valeur au rang ${midRank} = ${mid} ${unit}`
-        : `2. Median: Rank = (${n} + 1) / 2 = ${midRank}\n   Median = value at rank ${midRank} = ${mid} ${unit}`;
+        ? `2. Médiane : Rang = (${n} + 1) / 2 = ${midRankInt}\n   Médiane = valeur au rang ${midRankInt} = ${mid} ${unit}`
+        : `2. Median: Rank = (${n} + 1) / 2 = ${midRankInt}\n   Median = value at rank ${midRankInt} = ${mid} ${unit}`;
     }
     
     // Q1 avec rappel du calcul du rang
@@ -181,10 +186,6 @@ const generateNotebookImage = async (exercise: ExerciseStep, language: Language)
     const { answerLogic } = exercise.rawData;
     const p = document.createElement('p'); p.textContent = answerLogic; p.style.color = '#1a237e'; content.appendChild(p);
   }
-  const annotation = document.createElement('div');
-  Object.assign(annotation.style, { position: 'absolute', bottom: '50px', right: '50px', fontFamily: '"Caveat", cursive', color: '#c62828', fontSize: '48px', transform: 'rotate(-10deg)', border: '3px solid #c62828', borderRadius: '50% 40% 60% 30%', padding: '10px 30px', textAlign: 'center', zIndex: '10' });
-  annotation.innerHTML = language === 'fr' ? "20/20<br><span style='font-size:30px'>Parfait !</span>" : "A+<br><span style='font-size:30px'>Perfect!</span>";
-  container.appendChild(annotation);
   container.appendChild(content); document.body.appendChild(container); await document.fonts.ready;
   try {
     const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: null, logging: false });
