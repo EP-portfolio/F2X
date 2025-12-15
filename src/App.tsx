@@ -134,7 +134,7 @@ const App: React.FC = () => {
         {renderContent()}
       </main>
       <footer className="py-8 text-center text-gray-400 text-sm font-medium">
-        <p>&copy; 2024 {language === 'fr' ? "Stat'Master - Fait avec ❤️ pour les collégiens." : "Stat'Master - Made with ❤️ for students."}</p>
+        <p>&copy; 2024 Stat'Master</p>
       </footer>
     </div>
   );
