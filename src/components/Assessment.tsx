@@ -115,11 +115,57 @@ const generateNotebookImage = async (exercise: ExerciseStep, language: Language)
     }
     tbody.appendChild(trTotal); table.appendChild(tbody); content.appendChild(table);
   } else if (exercise.type === 'indicators') {
-    const { mean, median, q1, q3, iqr, unit } = exercise.rawData;
-    const lines = language === 'fr' ? [`1. Moyenne = ${mean} ${unit}`, `2. Médiane = ${median} ${unit}`, `3. Q1 = ${q1}  ;  Q3 = ${q3}`, `4. Écart Inter-quartile = ${iqr}`] : [`1. Mean = ${mean} ${unit}`, `2. Median = ${median} ${unit}`, `3. Q1 = ${q1}  ;  Q3 = ${q3}`, `4. Interquartile Range = ${iqr}`];
+    const { mean, median, q1, q3, iqr, unit, rawList } = exercise.rawData;
+    
+    // Calculer les explications
+    const sortedData = rawList ? [...rawList].sort((a, b) => a - b) : [];
+    const n = sortedData.length;
+    const sum = sortedData.reduce((a, b) => a + b, 0);
+    
+    // Moyenne
+    const meanExplanation = language === 'fr' 
+      ? `1. Moyenne = (${sortedData.join(' + ')}) / ${n} = ${sum} / ${n} = ${mean} ${unit}`
+      : `1. Mean = (${sortedData.join(' + ')}) / ${n} = ${sum} / ${n} = ${mean} ${unit}`;
+    
+    // Médiane
+    let medianExplanation = '';
+    if (n % 2 === 0) {
+      const mid1 = sortedData[n / 2 - 1];
+      const mid2 = sortedData[n / 2];
+      medianExplanation = language === 'fr'
+        ? `2. Médiane = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${unit}`
+        : `2. Median = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${unit}`;
+    } else {
+      const mid = sortedData[Math.floor(n / 2)];
+      medianExplanation = language === 'fr'
+        ? `2. Médiane = valeur au rang ${Math.floor(n / 2) + 1} = ${mid} ${unit}`
+        : `2. Median = value at rank ${Math.floor(n / 2) + 1} = ${mid} ${unit}`;
+    }
+    
+    // Q1 et Q3
+    const q1Index = Math.ceil(n / 4) - 1;
+    const q3Index = Math.ceil((3 * n) / 4) - 1;
+    const q1Explanation = language === 'fr'
+      ? `3. Q1 = valeur au rang ${q1Index + 1} = ${q1}`
+      : `3. Q1 = value at rank ${q1Index + 1} = ${q1}`;
+    const q3Explanation = language === 'fr'
+      ? `   Q3 = valeur au rang ${q3Index + 1} = ${q3}`
+      : `   Q3 = value at rank ${q3Index + 1} = ${q3}`;
+    
+    // Écart interquartile
+    const iqrExplanation = language === 'fr'
+      ? `4. Écart Inter-quartile = Q3 - Q1 = ${q3} - ${q1} = ${iqr}`
+      : `4. Interquartile Range = Q3 - Q1 = ${q3} - ${q1} = ${iqr}`;
+    
+    const lines = [meanExplanation, medianExplanation, q1Explanation, q3Explanation, iqrExplanation];
     const ul = document.createElement('div');
     Object.assign(ul.style, { display: 'flex', flexDirection: 'column', gap: '20px', color: '#1a237e' });
-    lines.forEach(line => { const div = document.createElement('div'); div.textContent = line; ul.appendChild(div); });
+    lines.forEach(line => { 
+      const div = document.createElement('div'); 
+      div.textContent = line; 
+      Object.assign(div.style, { fontSize: '22px', lineHeight: '1.6' });
+      ul.appendChild(div); 
+    });
     content.appendChild(ul);
   } else if (exercise.type === 'problem') {
     const { answerLogic } = exercise.rawData;
@@ -339,7 +385,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
       correctionPrompt: "",
       rawData: { valeurs: dataA.valeurs, effectifs: dataA.effectifs, total: dataA.total, label: dataA.label, frequences: dataA.frequences, arrondi: dataA.arrondi, titre: dataA.titre }
     };
-    const ex3: ExerciseStep = { id: 3, title: `Stats : ${dataB.titre}`, description: "Moyenne, Médiane, Q1, Q3...", type: 'indicators', problem: `Série : ${cleanDataDisplayB}. Calcule tous les indicateurs.`, promptText: "", correctionPrompt: "", rawData: { mean: mean3, median: median3, q1, q3, iqr, unit: dataB.unite } };
+    const ex3: ExerciseStep = { id: 3, title: `Stats : ${dataB.titre}`, description: "Moyenne, Médiane, Q1, Q3...", type: 'indicators', problem: `Série : ${cleanDataDisplayB}. Calcule tous les indicateurs.`, promptText: "", correctionPrompt: "", rawData: { mean: mean3, median: median3, q1, q3, iqr, unit: dataB.unite, rawList: dataB.rawList } };
     const ex4: ExerciseStep = { id: 4, title: language === 'fr' ? "Résolution de Problème" : "Problem Solving", description: language === 'fr' ? "Interpréter pour choisir." : "Interpret to choose.", type: 'problem', problem: `${s4.goal}`, promptText: `Comparison:\nCompany A: Mean=2500, Med=1800\nCompany B: Mean=2500, Med=2400\nQuestion: "${s4.goal}"`, correctionPrompt: "", rawData: { answerLogic: s4.answerLogic } };
 
     setExercises([ex1, ex2, ex3, ex4]);

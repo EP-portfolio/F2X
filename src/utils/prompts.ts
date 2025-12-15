@@ -255,19 +255,62 @@ INSTRUCTIONS SPÉCIFIQUES - INDICATEURS STATISTIQUES :
    - Les résultats sont-ils arrondis correctement si nécessaire ?
    - Tous les indicateurs demandés sont-ils présents ?
 
-3. **Feedback** :
-   - Si correct : Valide chaque indicateur et explique brièvement la méthode
-   - Si incorrect : Indique quel(s) indicateur(s) est/sont faux, montre le calcul étape par étape, et explique l'erreur
+3. **Feedback OBLIGATOIRE - Explications de calcul détaillées** :
+   - Tu DOIS inclure pour CHAQUE indicateur une explication complète du calcul étape par étape
+   - **Moyenne** : Montre la somme de toutes les valeurs, puis la division par le nombre de valeurs
+     Exemple : "Moyenne = (12 + 15 + 18 + 20 + 22) / 5 = 87 / 5 = 17,4"
+   - **Médiane** : Montre les données triées, puis identifie la valeur médiane (ou la moyenne des deux valeurs centrales si nombre pair)
+     Exemple : "Données triées : 12, 15, 18, 20, 22. Médiane = valeur au rang 3 = 18"
+   - **Q1** : Montre le rang (N/4) et la valeur correspondante
+     Exemple : "Q1 = valeur au rang 2 = 15"
+   - **Q3** : Montre le rang (3N/4) et la valeur correspondante
+     Exemple : "Q3 = valeur au rang 4 = 20"
+   - **Écart interquartile** : Montre le calcul Q3 - Q1
+     Exemple : "Écart Inter-quartile = Q3 - Q1 = 20 - 15 = 5"
+   - Si correct : Valide chaque indicateur avec son explication de calcul complète
+   - Si incorrect : Indique quel(s) indicateur(s) est/sont faux, montre le calcul correct étape par étape avec toutes les étapes, et explique l'erreur
 `;
 
       if (rawData) {
+        const rawList = rawData.rawList || [];
+        const sortedData = rawList.length > 0 ? [...rawList].sort((a, b) => a - b) : [];
+        const n = sortedData.length;
+        const sum = sortedData.reduce((a, b) => a + b, 0);
+        
+        let meanExplanation = '';
+        let medianExplanation = '';
+        let q1Explanation = '';
+        let q3Explanation = '';
+        let iqrExplanation = '';
+        
+        if (n > 0) {
+          meanExplanation = `Moyenne = (${sortedData.join(' + ')}) / ${n} = ${sum} / ${n} = ${rawData.mean || 'N/A'} ${rawData.unit || ''}`;
+          
+          if (n % 2 === 0) {
+            const mid1 = sortedData[n / 2 - 1];
+            const mid2 = sortedData[n / 2];
+            medianExplanation = `Médiane = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${rawData.unit || ''}`;
+          } else {
+            const mid = sortedData[Math.floor(n / 2)];
+            medianExplanation = `Médiane = valeur au rang ${Math.floor(n / 2) + 1} = ${mid} ${rawData.unit || ''}`;
+          }
+          
+          const q1Index = Math.ceil(n / 4) - 1;
+          const q3Index = Math.ceil((3 * n) / 4) - 1;
+          q1Explanation = `Q1 = valeur au rang ${q1Index + 1} = ${rawData.q1 || 'N/A'}`;
+          q3Explanation = `Q3 = valeur au rang ${q3Index + 1} = ${rawData.q3 || 'N/A'}`;
+          iqrExplanation = `Écart Inter-quartile = Q3 - Q1 = ${rawData.q3 || 'N/A'} - ${rawData.q1 || 'N/A'} = ${rawData.iqr || 'N/A'}`;
+        }
+        
         specificInstructions += `
-RÉSULTATS ATTENDUS (pour référence) :
-- Moyenne : ${rawData.mean || 'N/A'} ${rawData.unit || ''}
-- Médiane : ${rawData.median || 'N/A'} ${rawData.unit || ''}
-- Q1 : ${rawData.q1 || 'N/A'}
-- Q3 : ${rawData.q3 || 'N/A'}
-- Écart interquartile : ${rawData.iqr || 'N/A'}
+RÉSULTATS ATTENDUS AVEC EXPLICATIONS DE CALCUL (pour référence) :
+- ${meanExplanation || `Moyenne : ${rawData.mean || 'N/A'} ${rawData.unit || ''}`}
+- ${medianExplanation || `Médiane : ${rawData.median || 'N/A'} ${rawData.unit || ''}`}
+- ${q1Explanation || `Q1 : ${rawData.q1 || 'N/A'}`}
+- ${q3Explanation || `Q3 : ${rawData.q3 || 'N/A'}`}
+- ${iqrExplanation || `Écart interquartile : ${rawData.iqr || 'N/A'}`}
+
+IMPORTANT : Utilise ces explications de calcul comme modèle pour ton feedback. Tu DOIS montrer toutes les étapes de calcul pour chaque indicateur.
 `;
       }
     } else if (exerciseType === 'problem') {
@@ -434,19 +477,62 @@ SPECIFIC INSTRUCTIONS - STATISTICAL INDICATORS :
    - Are results correctly rounded if necessary?
    - Are all requested indicators present?
 
-3. **Feedback** :
-   - If correct : Validate each indicator and briefly explain the method
-   - If incorrect : Indicate which indicator(s) is/are wrong, show the calculation step by step, and explain the error
+3. **MANDATORY Feedback - Detailed calculation explanations** :
+   - You MUST include for EACH indicator a complete step-by-step calculation explanation
+   - **Mean** : Show the sum of all values, then the division by the number of values
+     Example : "Mean = (12 + 15 + 18 + 20 + 22) / 5 = 87 / 5 = 17.4"
+   - **Median** : Show the sorted data, then identify the median value (or the average of the two central values if even number)
+     Example : "Sorted data : 12, 15, 18, 20, 22. Median = value at rank 3 = 18"
+   - **Q1** : Show the rank (N/4) and the corresponding value
+     Example : "Q1 = value at rank 2 = 15"
+   - **Q3** : Show the rank (3N/4) and the corresponding value
+     Example : "Q3 = value at rank 4 = 20"
+   - **Interquartile Range** : Show the calculation Q3 - Q1
+     Example : "Interquartile Range = Q3 - Q1 = 20 - 15 = 5"
+   - If correct : Validate each indicator with its complete calculation explanation
+   - If incorrect : Indicate which indicator(s) is/are wrong, show the correct calculation step by step with all steps, and explain the error
 `;
 
       if (rawData) {
+        const rawList = rawData.rawList || [];
+        const sortedData = rawList.length > 0 ? [...rawList].sort((a, b) => a - b) : [];
+        const n = sortedData.length;
+        const sum = sortedData.reduce((a, b) => a + b, 0);
+        
+        let meanExplanation = '';
+        let medianExplanation = '';
+        let q1Explanation = '';
+        let q3Explanation = '';
+        let iqrExplanation = '';
+        
+        if (n > 0) {
+          meanExplanation = `Mean = (${sortedData.join(' + ')}) / ${n} = ${sum} / ${n} = ${rawData.mean || 'N/A'} ${rawData.unit || ''}`;
+          
+          if (n % 2 === 0) {
+            const mid1 = sortedData[n / 2 - 1];
+            const mid2 = sortedData[n / 2];
+            medianExplanation = `Median = (${mid1} + ${mid2}) / 2 = ${(mid1 + mid2) / 2} ${rawData.unit || ''}`;
+          } else {
+            const mid = sortedData[Math.floor(n / 2)];
+            medianExplanation = `Median = value at rank ${Math.floor(n / 2) + 1} = ${mid} ${rawData.unit || ''}`;
+          }
+          
+          const q1Index = Math.ceil(n / 4) - 1;
+          const q3Index = Math.ceil((3 * n) / 4) - 1;
+          q1Explanation = `Q1 = value at rank ${q1Index + 1} = ${rawData.q1 || 'N/A'}`;
+          q3Explanation = `Q3 = value at rank ${q3Index + 1} = ${rawData.q3 || 'N/A'}`;
+          iqrExplanation = `Interquartile Range = Q3 - Q1 = ${rawData.q3 || 'N/A'} - ${rawData.q1 || 'N/A'} = ${rawData.iqr || 'N/A'}`;
+        }
+        
         specificInstructions += `
-EXPECTED RESULTS (for reference) :
-- Mean : ${rawData.mean || 'N/A'} ${rawData.unit || ''}
-- Median : ${rawData.median || 'N/A'} ${rawData.unit || ''}
-- Q1 : ${rawData.q1 || 'N/A'}
-- Q3 : ${rawData.q3 || 'N/A'}
-- Interquartile Range : ${rawData.iqr || 'N/A'}
+EXPECTED RESULTS WITH CALCULATION EXPLANATIONS (for reference) :
+- ${meanExplanation || `Mean : ${rawData.mean || 'N/A'} ${rawData.unit || ''}`}
+- ${medianExplanation || `Median : ${rawData.median || 'N/A'} ${rawData.unit || ''}`}
+- ${q1Explanation || `Q1 : ${rawData.q1 || 'N/A'}`}
+- ${q3Explanation || `Q3 : ${rawData.q3 || 'N/A'}`}
+- ${iqrExplanation || `Interquartile Range : ${rawData.iqr || 'N/A'}`}
+
+IMPORTANT : Use these calculation explanations as a model for your feedback. You MUST show all calculation steps for each indicator.
 `;
       }
     } else if (exerciseType === 'problem') {
