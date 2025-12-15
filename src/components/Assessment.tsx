@@ -751,20 +751,29 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
     // Frequencies
     if (exercise.type === 'frequency') {
       expected.frequences.forEach((freq: any, idx: number) => {
+        const eff = expected.effectifs[idx];
+        const total = expected.total;
+        const decimalExact = eff / total;
+        // Recalculer avec arrondi au centième (2 décimales) - TOUJOURS
+        const expectedDec = Math.round(decimalExact * 100) / 100;
+        // Recalculer le pourcentage arrondi à l'unité - TOUJOURS
+        const expectedPct = Math.round(decimalExact * 100);
+        
         const fracInput = inputs.freqFrac[idx]?.trim();
         const fracVal = fracInput ? parseFraction(fracInput) : NaN;
         const dec = parseFloat(inputs.freqDec[idx]?.replace(',', '.'));
         const pct = parseFloat(inputs.freqPct[idx]?.replace(',', '.'));
-        const expectedDec = parseFloat(freq.decimalFormate);
-        const expectedPct = parseFloat(freq.pourcentageFormate);
-        const fracOk = !isNaN(fracVal) && Math.abs(fracVal - expectedDec) <= 0.01;
+        
+        const fracOk = !isNaN(fracVal) && Math.abs(fracVal - decimalExact) <= 0.01;
         const decOk = isFinite(dec) && Math.abs(dec - expectedDec) <= 0.01;
         const pctRounded = Math.round(pct);
-        const expectedPctRounded = Math.round(expectedPct);
-        const pctOk = isFinite(pct) && Math.abs(pctRounded - expectedPctRounded) <= 0;
+        const pctOk = isFinite(pct) && Math.abs(pctRounded - expectedPct) <= 0;
+        
+        const expectedDecStr = expectedDec.toFixed(2).replace('.', language === 'fr' ? ',' : '.');
+        
         if (!fracOk) errors.push(language === 'fr' ? `Fréq fraction de ${expected.valeurs[idx]} attendue ≈ ${freq.fraction} (accepte non réduites)` : `Fraction freq for ${expected.valeurs[idx]} should match ≈ ${freq.fraction} (unreduced accepted)`);
-        if (!decOk) errors.push(language === 'fr' ? `Fréq décimale de ${expected.valeurs[idx]} attendue ≈ ${freq.decimalFormate}` : `Decimal freq for ${expected.valeurs[idx]} should be ≈ ${freq.decimalFormate}`);
-        if (!pctOk) errors.push(language === 'fr' ? `Fréq % de ${expected.valeurs[idx]} attendue (arrondie à l'unité) ≈ ${Math.round(expectedPct)}` : `Percent freq for ${expected.valeurs[idx]} should be rounded to unit ≈ ${Math.round(expectedPct)}`);
+        if (!decOk) errors.push(language === 'fr' ? `Fréq décimale de ${expected.valeurs[idx]} attendue = ${expectedDecStr} (arrondie au centième)` : `Decimal freq for ${expected.valeurs[idx]} expected = ${expectedDecStr} (rounded to hundredth)`);
+        if (!pctOk) errors.push(language === 'fr' ? `Fréq % de ${expected.valeurs[idx]} attendue (arrondie à l'unité) = ${expectedPct}%` : `Percent freq for ${expected.valeurs[idx]} expected (rounded to unit) = ${expectedPct}%`);
       });
     }
 
