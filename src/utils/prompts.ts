@@ -167,34 +167,63 @@ DONNÉES ATTENDUES (pour référence) :
 `;
       }
     } else if (exerciseType === 'frequency') {
+      // Calculer les fréquences attendues avec les bons arrondis
+      let frequencesAttendues = '';
+      if (rawData?.valeurs && rawData?.effectifs && rawData?.total) {
+        frequencesAttendues = '\nFRÉQUENCES ATTENDUES (pour référence) :\n';
+        rawData.valeurs.forEach((val: number, idx: number) => {
+          const eff = rawData.effectifs[idx];
+          const decimalExact = eff / rawData.total;
+          // Arrondir au centième (2 décimales)
+          const decimalArrondi = Math.round(decimalExact * 100) / 100;
+          // Arrondir le pourcentage à l'unité
+          const pctRounded = Math.round(decimalExact * 100);
+          // Calculer la fraction simplifiée
+          const pgcd = (a: number, b: number): number => {
+            a = Math.abs(a);
+            b = Math.abs(b);
+            while (b !== 0) {
+              const t = b;
+              b = a % b;
+              a = t;
+            }
+            return a;
+          };
+          const diviseur = pgcd(eff, rawData.total);
+          const fraction = `${eff / diviseur}/${rawData.total / diviseur}`;
+          frequencesAttendues += `- Valeur ${val}: Fraction = ${fraction} (accepte non réduites), Décimal = ${decimalArrondi.toFixed(2).replace('.', ',')} (arrondi au centième), % = ${pctRounded}% (arrondi à l'unité)\n`;
+        });
+      }
+
       specificInstructions = `
 INSTRUCTIONS SPÉCIFIQUES - CALCUL DE FRÉQUENCES :
-1. **Vérification des fréquences** :
-   - Vérifie que les fréquences en fraction sont simplifiées au maximum
-   - Vérifie que les fréquences décimales respectent la précision demandée (${rawData?.arrondi?.texteEnonce || 'selon consigne'})
-   - Vérifie que les fréquences en pourcentage sont cohérentes avec les décimales
-   - Vérifie que la somme des fréquences décimales/pourcentages est égale à 1/100%
+1. **Règles d'arrondi OBLIGATOIRES pour cet exercice** :
+   - Fréquences décimales : TOUJOURS arrondies au CENTIÈME (2 décimales)
+   - Fréquences en pourcentage : TOUJOURS arrondies à L'UNITÉ (0 décimales)
+   - Fréquences en fraction : accepte les fractions non réduites (ex: 2/16 au lieu de 1/8)
 
-2. **Calculs à vérifier** :
+2. **Vérification des fréquences** :
+   - Vérifie que les fréquences en fraction correspondent à Effectif / Total (peuvent être non réduites)
+   - Vérifie que les fréquences décimales sont arrondies au CENTIÈME (ex: 0,13 pour 2/16 = 0,125)
+   - Vérifie que les fréquences en pourcentage sont arrondies à L'UNITÉ (ex: 13% pour 2/16 = 12,5%)
+   - Vérifie que la somme des fréquences décimales ≈ 1,00 (tolérance ±0,01)
+   - Vérifie que la somme des fréquences en % ≈ 100% (tolérance ±1%)
+
+3. **Calculs à vérifier** :
    - Fréquence (fraction) = Effectif / Total
-   - Fréquence (décimal) = Arrondi(Effectif / Total, précision)
-   - Fréquence (%) = Arrondi((Effectif / Total) × 100, précision)
+   - Fréquence (décimal) = Arrondi(Effectif / Total, 2 décimales) → au CENTIÈME
+   - Fréquence (%) = Arrondi((Effectif / Total) × 100, 0 décimales) → à L'UNITÉ
 
-3. **Points critiques** :
-   - Les arrondis sont-ils corrects selon la consigne ?
+4. **Points critiques** :
+   - Les arrondis respectent-ils les règles ci-dessus ?
    - Les conversions entre fraction, décimal et pourcentage sont-elles cohérentes ?
-   - La somme des fréquences est-elle égale à 1 (ou 100%) ?
+   - La somme des fréquences est-elle proche de 1 (ou 100%) ?
 
-4. **Feedback** :
+5. **Feedback** :
    - Si correct : Valide chaque colonne et félicite
-   - Si incorrect : Indique précisément quelles fréquences sont fausses, montre le calcul correct, et explique l'erreur
+   - Si incorrect : Indique précisément quelles fréquences sont fausses, montre le calcul correct avec les bons arrondis, et explique l'erreur
+${frequencesAttendues}
 `;
-
-      if (rawData?.arrondi) {
-        specificInstructions += `
-PRÉCISION D'ARRONDI REQUISE : ${rawData.arrondi.texteConsigne}
-`;
-      }
     } else if (exerciseType === 'indicators') {
       specificInstructions = `
 INSTRUCTIONS SPÉCIFIQUES - INDICATEURS STATISTIQUES :
@@ -303,34 +332,63 @@ EXPECTED DATA (for reference) :
 `;
       }
     } else if (exerciseType === 'frequency') {
+      // Calculate expected frequencies with correct rounding
+      let frequencesAttendues = '';
+      if (rawData?.valeurs && rawData?.effectifs && rawData?.total) {
+        frequencesAttendues = '\nEXPECTED FREQUENCIES (for reference) :\n';
+        rawData.valeurs.forEach((val: number, idx: number) => {
+          const eff = rawData.effectifs[idx];
+          const decimalExact = eff / rawData.total;
+          // Round to hundredth (2 decimals)
+          const decimalArrondi = Math.round(decimalExact * 100) / 100;
+          // Round percentage to unit
+          const pctRounded = Math.round(decimalExact * 100);
+          // Calculate simplified fraction
+          const pgcd = (a: number, b: number): number => {
+            a = Math.abs(a);
+            b = Math.abs(b);
+            while (b !== 0) {
+              const t = b;
+              b = a % b;
+              a = t;
+            }
+            return a;
+          };
+          const diviseur = pgcd(eff, rawData.total);
+          const fraction = `${eff / diviseur}/${rawData.total / diviseur}`;
+          frequencesAttendues += `- Value ${val}: Fraction = ${fraction} (non-reduced accepted), Decimal = ${decimalArrondi.toFixed(2)} (rounded to hundredth), % = ${pctRounded}% (rounded to unit)\n`;
+        });
+      }
+
       specificInstructions = `
 SPECIFIC INSTRUCTIONS - RELATIVE FREQUENCY CALCULATION :
-1. **Frequency verification** :
-   - Verify that fraction frequencies are maximally simplified
-   - Verify that decimal frequencies respect the required precision (${rawData?.arrondi?.texteEnonce || 'as per instructions'})
-   - Verify that percentage frequencies are consistent with decimals
-   - Verify that the sum of decimal/percentage frequencies equals 1/100%
+1. **MANDATORY rounding rules for this exercise** :
+   - Decimal frequencies : ALWAYS rounded to the HUNDREDTH (2 decimals)
+   - Percentage frequencies : ALWAYS rounded to the UNIT (0 decimals)
+   - Fraction frequencies : non-reduced fractions accepted (e.g. 2/16 instead of 1/8)
 
-2. **Calculations to verify** :
+2. **Frequency verification** :
+   - Verify that fraction frequencies correspond to Count / Total (can be non-reduced)
+   - Verify that decimal frequencies are rounded to the HUNDREDTH (e.g. 0.13 for 2/16 = 0.125)
+   - Verify that percentage frequencies are rounded to the UNIT (e.g. 13% for 2/16 = 12.5%)
+   - Verify that the sum of decimal frequencies ≈ 1.00 (tolerance ±0.01)
+   - Verify that the sum of percentage frequencies ≈ 100% (tolerance ±1%)
+
+3. **Calculations to verify** :
    - Frequency (fraction) = Count / Total
-   - Frequency (decimal) = Round(Count / Total, precision)
-   - Frequency (%) = Round((Count / Total) × 100, precision)
+   - Frequency (decimal) = Round(Count / Total, 2 decimals) → to HUNDREDTH
+   - Frequency (%) = Round((Count / Total) × 100, 0 decimals) → to UNIT
 
-3. **Critical points** :
-   - Are rounding correct according to instructions?
+4. **Critical points** :
+   - Do rounding respect the rules above?
    - Are conversions between fraction, decimal, and percentage consistent?
-   - Does the sum of frequencies equal 1 (or 100%)?
+   - Does the sum of frequencies equal approximately 1 (or 100%)?
 
-4. **Feedback** :
+5. **Feedback** :
    - If correct : Validate each column and congratulate
-   - If incorrect : Precisely indicate which frequencies are wrong, show the correct calculation, and explain the error
+   - If incorrect : Precisely indicate which frequencies are wrong, show the correct calculation with proper rounding, and explain the error
+${frequencesAttendues}
 `;
-
-      if (rawData?.arrondi) {
-        specificInstructions += `
-REQUIRED ROUNDING PRECISION : ${rawData.arrondi.texteConsigne}
-`;
-      }
     } else if (exerciseType === 'indicators') {
       specificInstructions = `
 SPECIFIC INSTRUCTIONS - STATISTICAL INDICATORS :
