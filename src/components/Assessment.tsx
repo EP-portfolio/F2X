@@ -455,7 +455,35 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
         correctionImagePromise
       ]);
 
-      const feedback = feedbackResponse.text || (language === 'fr' ? "Analyse impossible." : "Analysis failed.");
+      let feedback = feedbackResponse.text || (language === 'fr' ? "Analyse impossible." : "Analysis failed.");
+
+      // Post-traitement : ajouter un bloc avec les fréquences attendues calculées par l'app
+      if (currentExercise.type === 'frequency' && currentExercise.rawData) {
+        const { valeurs, effectifs, total } = currentExercise.rawData;
+        if (Array.isArray(valeurs) && Array.isArray(effectifs) && total) {
+          let blocFreq = "\n\n";
+          if (language === 'fr') {
+            blocFreq += "Fréquences attendues (calculées par l'application) :\n";
+          } else {
+            blocFreq += "Expected frequencies (computed by the app):\n";
+          }
+          valeurs.forEach((val: number, idx: number) => {
+            const eff = effectifs[idx];
+            const decimalExact = eff / total;
+            const decimalArrondi = Math.round(decimalExact * 100) / 100;
+            const pctRounded = Math.round(decimalExact * 100);
+            const decimalStr = decimalArrondi.toFixed(2).replace('.', language === 'fr' ? ',' : '.');
+            if (language === 'fr') {
+              blocFreq += `• Fréq décimale de ${val} attendue ≈ ${decimalStr}\n`;
+              blocFreq += `• Fréq % de ${val} attendue (arrondie à l'unité) ≈ ${pctRounded}\n`;
+            } else {
+              blocFreq += `• Decimal freq for ${val} expected ≈ ${decimalStr}\n`;
+              blocFreq += `• % freq for ${val} expected (rounded to unit) ≈ ${pctRounded}\n`;
+            }
+          });
+          feedback += blocFreq;
+        }
+      }
 
       setFeedbackHistory(prev => {
         const newHistory = [...prev];
