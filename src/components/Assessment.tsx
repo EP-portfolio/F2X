@@ -204,6 +204,73 @@ const generateProblemImage = async (exercise: ExerciseStep, language: Language):
     content.appendChild(p);
   });
 
+  // Ajouter un exemple de tableau pour l'exercice 'indicators'
+  if (exercise.type === 'indicators' && exercise.rawData) {
+    const exampleTable = document.createElement('table');
+    Object.assign(exampleTable.style, {
+      width: '100%',
+      borderCollapse: 'collapse',
+      marginTop: '30px',
+      backgroundColor: 'transparent',
+      color: '#1a237e'
+    });
+
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    const headers = language === 'fr' 
+      ? ['Indicateur', 'Valeur']
+      : ['Indicator', 'Value'];
+    
+    headers.forEach(h => {
+      const th = document.createElement('th');
+      th.textContent = h;
+      Object.assign(th.style, {
+        border: '2px solid #1a237e',
+        padding: '10px',
+        textAlign: 'center',
+        fontWeight: 'bold',
+        color: '#1a237e',
+        fontFamily: '"Patrick Hand", cursive'
+      });
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    exampleTable.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    const indicators = language === 'fr'
+      ? ['1. Moyenne', '2. Médiane', '3. Q1', '4. Q3', '5. Écart Inter-quartile']
+      : ['1. Mean', '2. Median', '3. Q1', '4. Q3', '5. Interquartile Range'];
+    
+    indicators.forEach((indicator, idx) => {
+      const tr = document.createElement('tr');
+      const td1 = document.createElement('td');
+      td1.textContent = indicator;
+      Object.assign(td1.style, {
+        border: '2px solid #1a237e',
+        padding: '8px',
+        textAlign: 'left',
+        color: '#1a237e',
+        fontFamily: '"Patrick Hand", cursive'
+      });
+      const td2 = document.createElement('td');
+      td2.textContent = '?';
+      Object.assign(td2.style, {
+        border: '2px solid #1a237e',
+        padding: '8px',
+        textAlign: 'center',
+        color: '#1a237e',
+        fontFamily: '"Patrick Hand", cursive',
+        fontWeight: 'bold'
+      });
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tbody.appendChild(tr);
+    });
+    exampleTable.appendChild(tbody);
+    content.appendChild(exampleTable);
+  }
+
   container.appendChild(content);
   document.body.appendChild(container);
   await document.fonts.ready;
@@ -241,6 +308,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
   const [emailSent, setEmailSent] = useState(false);
   const [answerModes, setAnswerModes] = useState<Record<number, 'photo' | 'manual'>>({});
   const [tableInputs, setTableInputs] = useState<Record<number, { effectifs: string[]; freqFrac: string[]; freqDec: string[]; freqPct: string[] }>>({});
+  const [indicatorsInputs, setIndicatorsInputs] = useState<Record<number, { mean: string; median: string; q1: string; q3: string; iqr: string }>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { generateRandomExercises(); }, [language]);
@@ -534,11 +602,67 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
     });
   };
 
+  const handleIndicatorsInputChange = (exId: number, field: 'mean' | 'median' | 'q1' | 'q3' | 'iqr', value: string) => {
+    setIndicatorsInputs(prev => {
+      const current = prev[exId] || { mean: '', median: '', q1: '', q3: '', iqr: '' };
+      return { ...prev, [exId]: { ...current, [field]: value } };
+    });
+  };
+
   const handleManualSubmit = async () => {
-    if (currentExercise.type !== 'table' && currentExercise.type !== 'frequency') return;
-    setIsGeneratingCorrection(true);
-    await evaluateManualTable(currentExercise);
-    setIsGeneratingCorrection(false);
+    if (currentExercise.type === 'table' || currentExercise.type === 'frequency') {
+      setIsGeneratingCorrection(true);
+      await evaluateManualTable(currentExercise);
+      setIsGeneratingCorrection(false);
+    } else if (currentExercise.type === 'indicators') {
+      setIsGeneratingCorrection(true);
+      await evaluateManualIndicators(currentExercise);
+      setIsGeneratingCorrection(false);
+    }
+  };
+
+  const evaluateManualIndicators = async (exercise: ExerciseStep) => {
+    if (!exercise.rawData) return;
+    const inputs = indicatorsInputs[exercise.id];
+    const expected = exercise.rawData;
+    if (!inputs) return;
+
+    const errors: string[] = [];
+    const { mean, median, q1, q3, iqr, unit } = expected;
+
+    const parseValue = (val: string) => parseFloat(val.replace(',', '.'));
+
+    const meanVal = parseValue(inputs.mean);
+    const medianVal = parseValue(inputs.median);
+    const q1Val = parseValue(inputs.q1);
+    const q3Val = parseValue(inputs.q3);
+    const iqrVal = parseValue(inputs.iqr);
+
+    const tolerance = 0.1;
+
+    if (isNaN(meanVal) || Math.abs(meanVal - parseFloat(mean)) > tolerance) {
+      errors.push(language === 'fr' ? `Moyenne attendue : ${mean} ${unit}` : `Expected mean: ${mean} ${unit}`);
+    }
+    if (isNaN(medianVal) || Math.abs(medianVal - parseFloat(median)) > tolerance) {
+      errors.push(language === 'fr' ? `Médiane attendue : ${median} ${unit}` : `Expected median: ${median} ${unit}`);
+    }
+    if (isNaN(q1Val) || Math.abs(q1Val - parseFloat(q1)) > tolerance) {
+      errors.push(language === 'fr' ? `Q1 attendu : ${q1}` : `Expected Q1: ${q1}`);
+    }
+    if (isNaN(q3Val) || Math.abs(q3Val - parseFloat(q3)) > tolerance) {
+      errors.push(language === 'fr' ? `Q3 attendu : ${q3}` : `Expected Q3: ${q3}`);
+    }
+    if (isNaN(iqrVal) || Math.abs(iqrVal - parseFloat(iqr)) > tolerance) {
+      errors.push(language === 'fr' ? `Écart interquartile attendu : ${iqr}` : `Expected interquartile range: ${iqr}`);
+    }
+
+    const successMsg = language === 'fr' ? "Bravo, tous les indicateurs sont corrects !" : "Great, all indicators are correct!";
+    const errorHeader = language === 'fr' ? "Points à corriger :" : "Fix these:";
+    const feedback = errors.length === 0 ? successMsg : [errorHeader, ...errors.map(e => `• ${e}`)].join('\n');
+
+    setFeedbackHistory(prev => { const n = [...prev]; n[currentStepIndex] = feedback; return n; });
+    const correctionImg = await generateNotebookImage(exercise, language);
+    setGeneratedCorrectionImages(prev => ({ ...prev, [currentStepIndex]: correctionImg }));
   };
 
   const evaluateManualTable = async (exercise: ExerciseStep) => {
@@ -778,7 +902,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
                 <p className="mt-0.5">{tMain.solvePrompt}</p>
               </div>
 
-              {(currentExercise.type === 'table' || currentExercise.type === 'frequency') && (
+              {(currentExercise.type === 'table' || currentExercise.type === 'frequency' || currentExercise.type === 'indicators') && (
                 <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm space-y-4">
                   <div className="flex flex-wrap gap-3 items-center justify-between">
                     <div className="text-sm font-semibold text-gray-700 flex items-center gap-2">
@@ -791,7 +915,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
                     </div>
                   </div>
 
-                  {currentMode === 'manual' && (
+                  {currentMode === 'manual' && (currentExercise.type === 'table' || currentExercise.type === 'frequency') && (
                     <div className="overflow-auto bg-emerald-50 border border-emerald-100 rounded-2xl p-4">
                       <table className="min-w-full text-sm text-center">
                         <thead>
@@ -848,6 +972,87 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
                               )}
                             </tr>
                           ))}
+                        </tbody>
+                      </table>
+                      <div className="mt-4 flex justify-end">
+                        <button onClick={handleManualSubmit} disabled={isGeneratingCorrection} className="flex items-center gap-2 bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl shadow hover:bg-emerald-700 transition disabled:opacity-60">
+                          {isGeneratingCorrection && <RefreshCw className="animate-spin" size={16} />}
+                          {tMain.submitTable}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {currentMode === 'manual' && currentExercise.type === 'indicators' && (
+                    <div className="overflow-auto bg-emerald-50 border border-emerald-100 rounded-2xl p-4">
+                      <table className="min-w-full text-sm">
+                        <thead>
+                          <tr className="text-emerald-800">
+                            <th className="p-2 text-left">{language === 'fr' ? 'Indicateur' : 'Indicator'}</th>
+                            <th className="p-2 text-center">{language === 'fr' ? 'Valeur' : 'Value'}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="bg-white">
+                            <td className="p-2 font-semibold text-gray-700 border">{language === 'fr' ? '1. Moyenne' : '1. Mean'} {currentExercise.rawData?.unit ? `(${currentExercise.rawData.unit})` : ''}</td>
+                            <td className="p-2 border">
+                              <input
+                                type="text"
+                                className="w-full px-2 py-1 border rounded-lg text-center"
+                                placeholder={language === 'fr' ? 'Ex: 15.5' : 'Ex: 15.5'}
+                                value={indicatorsInputs[currentExercise.id]?.mean || ''}
+                                onChange={(e) => handleIndicatorsInputChange(currentExercise.id, 'mean', e.target.value)}
+                              />
+                            </td>
+                          </tr>
+                          <tr className="bg-white">
+                            <td className="p-2 font-semibold text-gray-700 border">{language === 'fr' ? '2. Médiane' : '2. Median'} {currentExercise.rawData?.unit ? `(${currentExercise.rawData.unit})` : ''}</td>
+                            <td className="p-2 border">
+                              <input
+                                type="text"
+                                className="w-full px-2 py-1 border rounded-lg text-center"
+                                placeholder={language === 'fr' ? 'Ex: 16' : 'Ex: 16'}
+                                value={indicatorsInputs[currentExercise.id]?.median || ''}
+                                onChange={(e) => handleIndicatorsInputChange(currentExercise.id, 'median', e.target.value)}
+                              />
+                            </td>
+                          </tr>
+                          <tr className="bg-white">
+                            <td className="p-2 font-semibold text-gray-700 border">3. Q1</td>
+                            <td className="p-2 border">
+                              <input
+                                type="text"
+                                className="w-full px-2 py-1 border rounded-lg text-center"
+                                placeholder={language === 'fr' ? 'Ex: 12' : 'Ex: 12'}
+                                value={indicatorsInputs[currentExercise.id]?.q1 || ''}
+                                onChange={(e) => handleIndicatorsInputChange(currentExercise.id, 'q1', e.target.value)}
+                              />
+                            </td>
+                          </tr>
+                          <tr className="bg-white">
+                            <td className="p-2 font-semibold text-gray-700 border">4. Q3</td>
+                            <td className="p-2 border">
+                              <input
+                                type="text"
+                                className="w-full px-2 py-1 border rounded-lg text-center"
+                                placeholder={language === 'fr' ? 'Ex: 18' : 'Ex: 18'}
+                                value={indicatorsInputs[currentExercise.id]?.q3 || ''}
+                                onChange={(e) => handleIndicatorsInputChange(currentExercise.id, 'q3', e.target.value)}
+                              />
+                            </td>
+                          </tr>
+                          <tr className="bg-white">
+                            <td className="p-2 font-semibold text-gray-700 border">{language === 'fr' ? '5. Écart Inter-quartile' : '5. Interquartile Range'}</td>
+                            <td className="p-2 border">
+                              <input
+                                type="text"
+                                className="w-full px-2 py-1 border rounded-lg text-center"
+                                placeholder={language === 'fr' ? 'Ex: 6' : 'Ex: 6'}
+                                value={indicatorsInputs[currentExercise.id]?.iqr || ''}
+                                onChange={(e) => handleIndicatorsInputChange(currentExercise.id, 'iqr', e.target.value)}
+                              />
+                            </td>
+                          </tr>
                         </tbody>
                       </table>
                       <div className="mt-4 flex justify-end">
