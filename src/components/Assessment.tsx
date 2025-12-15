@@ -234,6 +234,8 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
   const [reportReady, setReportReady] = useState(false);
   const [parentEmail, setParentEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);
+  const [answerModes, setAnswerModes] = useState<Record<number, 'photo' | 'manual'>>({});
+  const [tableInputs, setTableInputs] = useState<Record<number, { effectifs: string[]; freqDec: string[]; freqPct: string[] }>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { generateRandomExercises(); }, [language]);
@@ -257,10 +259,28 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
     const ex4: ExerciseStep = { id: 4, title: language === 'fr' ? "Résolution de Problème" : "Problem Solving", description: language === 'fr' ? "Interpréter pour choisir." : "Interpret to choose.", type: 'problem', problem: `${s4.goal}`, promptText: `Comparison:\nCompany A: Mean=2500, Med=1800\nCompany B: Mean=2500, Med=2400\nQuestion: "${s4.goal}"`, correctionPrompt: "", rawData: { answerLogic: s4.answerLogic } };
 
     setExercises([ex1, ex2, ex3, ex4]);
-    setGeneratedProblemImages({}); setGeneratedCorrectionImages({}); setFeedbackHistory([]); setCurrentStepIndex(0); setReportReady(false);
+    setGeneratedProblemImages({});
+    setGeneratedCorrectionImages({});
+    setFeedbackHistory([]);
+    setCurrentStepIndex(0);
+    setReportReady(false);
+    // init modes/inputs
+    const initialModes: Record<number, 'photo' | 'manual'> = {};
+    const initialInputs: Record<number, { effectifs: string[]; freqDec: string[]; freqPct: string[] }> = {};
+    [ex1, ex2].forEach((ex) => {
+      initialModes[ex.id] = 'photo';
+      initialInputs[ex.id] = {
+        effectifs: new Array(ex.rawData?.valeurs?.length || 0).fill(''),
+        freqDec: new Array(ex.rawData?.valeurs?.length || 0).fill(''),
+        freqPct: new Array(ex.rawData?.valeurs?.length || 0).fill(''),
+      };
+    });
+    setAnswerModes(initialModes);
+    setTableInputs(initialInputs);
   };
 
   const currentExercise = exercises[currentStepIndex];
+  const currentMode = answerModes[currentExercise?.id] || 'photo';
 
   // ... (Effects for AI Enrichment and Image Gen remain SAME, just ensure visual components below are updated) ...
   useEffect(() => {
@@ -455,6 +475,66 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
   const handleNext = () => { if (currentStepIndex < exercises.length - 1) { setCurrentStepIndex(prev => prev + 1); setShowTextFallback(false); } else { setReportReady(true); } };
   const handleSendReport = () => { if (!parentEmail.includes('@')) { alert(language === 'fr' ? "Email invalide" : "Invalid Email"); return; } setTimeout(() => setEmailSent(true), 1000); };
 
+  const handleModeChange = (mode: 'photo' | 'manual') => {
+    const exId = currentExercise.id;
+    setAnswerModes(prev => ({ ...prev, [exId]: mode }));
+  };
+
+  const handleInputChange = (exId: number, type: 'effectifs' | 'freqDec' | 'freqPct', idx: number, value: string) => {
+    setTableInputs(prev => {
+      const current = prev[exId] || { effectifs: [], freqDec: [], freqPct: [] };
+      const updated = { ...current, [type]: [...current[type]] };
+      updated[type][idx] = value;
+      return { ...prev, [exId]: updated };
+    });
+  };
+
+  const handleManualSubmit = async () => {
+    if (currentExercise.type !== 'table' && currentExercise.type !== 'frequency') return;
+    setIsGeneratingCorrection(true);
+    await evaluateManualTable(currentExercise);
+    setIsGeneratingCorrection(false);
+  };
+
+  const evaluateManualTable = async (exercise: ExerciseStep) => {
+    if (!exercise.rawData) return;
+    const inputs = tableInputs[exercise.id];
+    const expected = exercise.rawData;
+    if (!inputs) return;
+
+    const errors: string[] = [];
+    // Table effectifs
+    if (exercise.type === 'table') {
+      const totalUser = inputs.effectifs.reduce((sum, v) => sum + (parseInt(v, 10) || 0), 0);
+      const totalExpected = expected.total;
+      if (totalUser !== totalExpected) errors.push(language === 'fr' ? `Le total doit être ${totalExpected}` : `Total must be ${totalExpected}`);
+      expected.effectifs.forEach((eff: number, idx: number) => {
+        const val = parseInt(inputs.effectifs[idx], 10);
+        if (val !== eff) errors.push(language === 'fr' ? `Effectif de ${expected.valeurs[idx]} attendu : ${eff}` : `Count for ${expected.valeurs[idx]} should be ${eff}`);
+      });
+    }
+
+    // Frequencies
+    if (exercise.type === 'frequency') {
+      expected.frequences.forEach((freq: any, idx: number) => {
+        const dec = parseFloat(inputs.freqDec[idx]?.replace(',', '.'));
+        const pct = parseFloat(inputs.freqPct[idx]?.replace(',', '.'));
+        const decOk = Math.abs(dec - parseFloat(freq.decimalFormate)) <= 0.01;
+        const pctOk = Math.abs(pct - parseFloat(freq.pourcentageFormate)) <= 1;
+        if (!decOk) errors.push(language === 'fr' ? `Fréq décimale de ${expected.valeurs[idx]} attendue ≈ ${freq.decimalFormate}` : `Decimal freq for ${expected.valeurs[idx]} should be ≈ ${freq.decimalFormate}`);
+        if (!pctOk) errors.push(language === 'fr' ? `Fréq % de ${expected.valeurs[idx]} attendue ≈ ${freq.pourcentageFormate}` : `Percent freq for ${expected.valeurs[idx]} should be ≈ ${freq.pourcentageFormate}`);
+      });
+    }
+
+    const successMsg = language === 'fr' ? "Bravo, tableau complété correctement !" : "Great, table completed correctly!";
+    const errorHeader = language === 'fr' ? "Points à corriger :" : "Fix these:";
+    const feedback = errors.length === 0 ? successMsg : [errorHeader, ...errors.map(e => `- ${e}`)].join('\n');
+
+    setFeedbackHistory(prev => { const n = [...prev]; n[currentStepIndex] = feedback; return n; });
+    const correctionImg = await generateNotebookImage(exercise, language);
+    setGeneratedCorrectionImages(prev => ({ ...prev, [currentStepIndex]: correctionImg }));
+  };
+
   if (!exercises.length) return <div className="flex justify-center items-center h-64"><RefreshCw className="animate-spin text-amber-500" size={32} /></div>;
 
   // Render REPORT
@@ -517,9 +597,45 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
   }
 
   const tMain = language === 'fr' ? {
-    progression: "Progression", viewRaw: "Voir texte", viewNotebook: "Voir le cahier", play: "À toi de jouer !", aiGen: "Généré par IA", aiWriting: "L'IA écrit...", aiThinking: "Réflexion...", aiCorrection: "Correction du Prof IA", modelCopy: "La solution parfaite", writingCorrection: "Rédaction...", next: "Suivant", report: "Voir le Bilan", solvePrompt: "Résous ça sur papier, puis prends une photo !", analyzing: "Analyse en cours...", scan: "Scanner ma réponse"
+    progression: "Progression",
+    viewRaw: "Voir texte",
+    viewNotebook: "Voir le cahier",
+    play: "À toi de jouer !",
+    aiGen: "Généré par IA",
+    aiWriting: "L'IA écrit...",
+    aiThinking: "Réflexion...",
+    aiCorrection: "Correction du Prof IA",
+    modelCopy: "La solution parfaite",
+    writingCorrection: "Rédaction...",
+    next: "Suivant",
+    report: "Voir le Bilan",
+    solvePrompt: "Résous sur papier puis prends une photo, ou remplis le tableau ci-dessous.",
+    analyzing: "Analyse en cours...",
+    scan: "Scanner ma réponse",
+    modeTitle: "Choisir un mode de réponse",
+    modePhoto: "Photo de la copie",
+    modeManual: "Remplir le tableau ici",
+    submitTable: "Valider ma saisie"
   } : {
-    progression: "Progress", viewRaw: "View Raw", viewNotebook: "View Notebook", play: "Your Turn!", aiGen: "AI Generated", aiWriting: "Writing...", aiThinking: "Thinking...", aiCorrection: "AI Teacher Feedback", modelCopy: "Perfect Solution", writingCorrection: "Writing...", next: "Next", report: "View Report", solvePrompt: "Solve on paper, then snap a photo!", analyzing: "Analyzing...", scan: "Scan my Answer"
+    progression: "Progress",
+    viewRaw: "View Raw",
+    viewNotebook: "View Notebook",
+    play: "Your Turn!",
+    aiGen: "AI Generated",
+    aiWriting: "Writing...",
+    aiThinking: "Thinking...",
+    aiCorrection: "AI Teacher Feedback",
+    modelCopy: "Perfect Solution",
+    writingCorrection: "Writing...",
+    next: "Next",
+    report: "View Report",
+    solvePrompt: "Solve on paper and snap a photo, or fill the table below.",
+    analyzing: "Analyzing...",
+    scan: "Scan my Answer",
+    modeTitle: "Choose answer mode",
+    modePhoto: "Upload a photo",
+    modeManual: "Fill the table here",
+    submitTable: "Submit my answers"
   };
 
   return (
@@ -599,22 +715,97 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
                 <div className="bg-blue-100 p-1.5 rounded-lg"><AlertCircle size={20} className="text-blue-600" /></div>
                 <p className="mt-0.5">{tMain.solvePrompt}</p>
               </div>
-              <label className="flex flex-col items-center justify-center border-4 border-dashed border-gray-200 rounded-[2rem] p-10 hover:bg-gray-50 hover:border-amber-300 transition-all group cursor-pointer relative w-full h-64">
-                {isAnalyzing ? (
-                  <div className="text-center py-4">
-                    <div className="w-16 h-16 border-4 border-amber-200 border-t-amber-500 rounded-full animate-spin mx-auto mb-6"></div>
-                    <p className="text-amber-600 font-bold text-lg">{tMain.analyzing}</p>
-                  </div>
-                ) : (
-                  <>
-                    <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileUpload} className="hidden" />
-                    <div className="bg-gradient-to-br from-amber-400 to-orange-500 p-6 rounded-3xl shadow-lg shadow-orange-200 group-hover:scale-110 transition-transform duration-300 group-hover:rotate-3">
-                      <Camera size={48} className="text-white" />
+
+              {(currentExercise.type === 'table' || currentExercise.type === 'frequency') && (
+                <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm space-y-4">
+                  <div className="flex flex-wrap gap-3 items-center justify-between">
+                    <div className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <ClipboardList size={18} className="text-amber-500" />
+                      {tMain.modeTitle}
                     </div>
-                    <span className="font-black text-xl text-gray-400 mt-6 group-hover:text-amber-600 transition-colors">{tMain.scan}</span>
-                  </>
-                )}
-              </label>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleModeChange('photo')} className={`px-3 py-2 rounded-full text-sm font-bold border transition ${currentMode === 'photo' ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-amber-200'}`}>{tMain.modePhoto}</button>
+                      <button onClick={() => handleModeChange('manual')} className={`px-3 py-2 rounded-full text-sm font-bold border transition ${currentMode === 'manual' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-emerald-200'}`}>{tMain.modeManual}</button>
+                    </div>
+                  </div>
+
+                  {currentMode === 'manual' && (
+                    <div className="overflow-auto bg-emerald-50 border border-emerald-100 rounded-2xl p-4">
+                      <table className="min-w-full text-sm text-center">
+                        <thead>
+                          <tr className="text-emerald-800">
+                            <th className="p-2">{currentExercise.rawData?.label || 'Valeur'}</th>
+                            <th className="p-2">{language === 'fr' ? 'Effectif' : 'Count'}</th>
+                            {currentExercise.type === 'frequency' && (<><th className="p-2">Fréq (Déc)</th><th className="p-2">Fréq (%)</th></>)}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {currentExercise.rawData?.valeurs?.map((val: number, idx: number) => (
+                            <tr key={idx} className="bg-white">
+                              <td className="p-2 font-semibold text-gray-700 border">{val}</td>
+                              <td className="p-2 border">
+                                <input
+                                  type="number"
+                                  className="w-24 px-2 py-1 border rounded-lg text-center"
+                                  value={tableInputs[currentExercise.id]?.effectifs[idx] || ''}
+                                  onChange={(e) => handleInputChange(currentExercise.id, 'effectifs', idx, e.target.value)}
+                                />
+                              </td>
+                              {currentExercise.type === 'frequency' && (
+                                <>
+                                  <td className="p-2 border">
+                                    <input
+                                      type="text"
+                                      className="w-28 px-2 py-1 border rounded-lg text-center"
+                                      placeholder="0.25"
+                                      value={tableInputs[currentExercise.id]?.freqDec[idx] || ''}
+                                      onChange={(e) => handleInputChange(currentExercise.id, 'freqDec', idx, e.target.value)}
+                                    />
+                                  </td>
+                                  <td className="p-2 border">
+                                    <input
+                                      type="text"
+                                      className="w-28 px-2 py-1 border rounded-lg text-center"
+                                      placeholder="25"
+                                      value={tableInputs[currentExercise.id]?.freqPct[idx] || ''}
+                                      onChange={(e) => handleInputChange(currentExercise.id, 'freqPct', idx, e.target.value)}
+                                    />
+                                  </td>
+                                </>
+                              )}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <div className="mt-4 flex justify-end">
+                        <button onClick={handleManualSubmit} disabled={isGeneratingCorrection} className="flex items-center gap-2 bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl shadow hover:bg-emerald-700 transition disabled:opacity-60">
+                          {isGeneratingCorrection && <RefreshCw className="animate-spin" size={16} />}
+                          {tMain.submitTable}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {currentMode === 'photo' && (
+                <label className="flex flex-col items-center justify-center border-4 border-dashed border-gray-200 rounded-[2rem] p-10 hover:bg-gray-50 hover:border-amber-300 transition-all group cursor-pointer relative w-full h-64">
+                  {isAnalyzing ? (
+                    <div className="text-center py-4">
+                      <div className="w-16 h-16 border-4 border-amber-200 border-t-amber-500 rounded-full animate-spin mx-auto mb-6"></div>
+                      <p className="text-amber-600 font-bold text-lg">{tMain.analyzing}</p>
+                    </div>
+                  ) : (
+                    <>
+                      <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleFileUpload} className="hidden" />
+                      <div className="bg-gradient-to-br from-amber-400 to-orange-500 p-6 rounded-3xl shadow-lg shadow-orange-200 group-hover:scale-110 transition-transform duration-300 group-hover:rotate-3">
+                        <Camera size={48} className="text-white" />
+                      </div>
+                      <span className="font-black text-xl text-gray-400 mt-6 group-hover:text-amber-600 transition-colors">{tMain.scan}</span>
+                    </>
+                  )}
+                </label>
+              )}
             </div>
           )}
         </div>
