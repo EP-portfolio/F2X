@@ -221,13 +221,21 @@ INSTRUCTIONS SPÉCIFIQUES - CALCUL DE FRÉQUENCES :
 
 5. **IMPORTANT - Utilisation des fréquences attendues** :
    - Utilise EXACTEMENT les fréquences attendues ci-dessous pour comparer avec le travail de l'élève
-   - Si tu mentionnes les fréquences correctes dans ton feedback, utilise TOUJOURS les valeurs des fréquences attendues
-   - Les fréquences décimales doivent TOUJOURS être arrondies au CENTIÈME (2 décimales) - jamais plus, jamais moins
-   - Les fréquences en pourcentage doivent TOUJOURS être arrondies à L'UNITÉ (0 décimales)
+   - Si tu mentionnes les fréquences correctes dans ton feedback, COPIE EXACTEMENT les valeurs des fréquences attendues (sans utiliser "≈", utilise "=")
+   - Les fréquences décimales doivent TOUJOURS être affichées avec EXACTEMENT 2 chiffres après la virgule (ex: 0,11, 0,22, 0,56) - JAMAIS "≈ 0" ou "≈ 1"
+   - Les fréquences en pourcentage doivent TOUJOURS être arrondies à L'UNITÉ (0 décimales, ex: 11%, 22%, 56%)
 
-6. **Feedback** :
+6. **Format de feedback pour les fréquences** :
+   - Quand tu listes les fréquences attendues, utilise EXACTEMENT ce format :
+     • Fréq fraction de X attendue = [fraction] (accepte non réduites)
+     • Fréq décimale de X attendue = [valeur avec 2 décimales, ex: 0,11] (arrondi au centième)
+     • Fréq % de X attendue = [valeur entière]% (arrondie à l'unité)
+   - NE PAS utiliser "≈" - utiliser "="
+   - NE PAS arrondir les décimales à 0 ou 1 - TOUJOURS afficher 2 décimales
+
+7. **Feedback** :
    - Si correct : Valide chaque colonne et félicite
-   - Si incorrect : Indique précisément quelles fréquences sont fausses, montre le calcul correct avec les EXACTES valeurs des fréquences attendues ci-dessous, et explique l'erreur
+   - Si incorrect : Indique précisément quelles fréquences sont fausses, montre le calcul correct en COPIANT EXACTEMENT les valeurs des fréquences attendues ci-dessous (avec 2 décimales pour les décimales), et explique l'erreur
 ${frequencesAttendues}
 `;
     } else if (exerciseType === 'indicators') {
@@ -392,13 +400,21 @@ SPECIFIC INSTRUCTIONS - RELATIVE FREQUENCY CALCULATION :
 
 5. **IMPORTANT - Using expected frequencies** :
    - Use EXACTLY the expected frequencies below to compare with the student's work
-   - If you mention correct frequencies in your feedback, ALWAYS use the values from the expected frequencies
-   - Decimal frequencies must ALWAYS be rounded to the HUNDREDTH (2 decimals) - never more, never less
-   - Percentage frequencies must ALWAYS be rounded to the UNIT (0 decimals)
+   - If you mention correct frequencies in your feedback, COPY EXACTLY the values from the expected frequencies (do not use "≈", use "=")
+   - Decimal frequencies must ALWAYS be displayed with EXACTLY 2 digits after the decimal point (e.g. 0.11, 0.22, 0.56) - NEVER "≈ 0" or "≈ 1"
+   - Percentage frequencies must ALWAYS be rounded to the UNIT (0 decimals, e.g. 11%, 22%, 56%)
 
-6. **Feedback** :
+6. **Feedback format for frequencies** :
+   - When listing expected frequencies, use EXACTLY this format :
+     • Freq fraction of X expected = [fraction] (non-reduced accepted)
+     • Freq decimal of X expected = [value with 2 decimals, e.g. 0.11] (rounded to hundredth)
+     • Freq % of X expected = [whole number]% (rounded to unit)
+   - DO NOT use "≈" - use "="
+   - DO NOT round decimals to 0 or 1 - ALWAYS display 2 decimals
+
+7. **Feedback** :
    - If correct : Validate each column and congratulate
-   - If incorrect : Precisely indicate which frequencies are wrong, show the correct calculation with the EXACT values from the expected frequencies below, and explain the error
+   - If incorrect : Precisely indicate which frequencies are wrong, show the correct calculation by COPYING EXACTLY the values from the expected frequencies below (with 2 decimals for decimals), and explain the error
 ${frequencesAttendues}
 `;
     } else if (exerciseType === 'indicators') {
