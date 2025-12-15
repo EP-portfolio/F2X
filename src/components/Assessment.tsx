@@ -254,7 +254,18 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
     const s4 = language === 'fr' ? scenarioFr : scenarioEn;
 
     const ex1: ExerciseStep = { id: 1, title: language === 'fr' ? `Tableau : ${dataA.titre}` : `Table: ${dataA.titre}`, description: language === 'fr' ? "Regrouper les données brutes dans un tableau d'effectifs." : "Group raw data into a frequency table.", type: 'table', problem: language === 'fr' ? `Sondage sur "${dataA.titre}".\nDonnées brutes : ${cleanDataDisplayA}.\n\nConstruis le tableau des effectifs en regroupant les valeurs.` : `Survey on "${dataA.titre}".\nRaw Data: ${cleanDataDisplayA}.\n\nBuild the frequency table by grouping values.`, promptText: "", correctionPrompt: "", rawData: { valeurs: dataA.valeurs, effectifs: dataA.effectifs, total: dataA.total, label: dataA.label, frequences: dataA.frequences, arrondi: dataA.arrondi, titre: dataA.titre } };
-    const ex2: ExerciseStep = { id: 2, title: language === 'fr' ? "Calcul de Fréquences" : "Relative Frequencies", description: language === 'fr' ? "Compléter le tableau précédent avec les fréquences." : "Complete the table with relative frequencies.", type: 'frequency', problem: language === 'fr' ? `Reprenons le tableau de l'exercice précédent.\nAjoute 3 colonnes : Fréquence (Fraction), Fréquence (Décimal), Fréquence (%).\nConsigne : ${dataA.arrondi.texteConsigne}` : `Let's use the previous table.\nAdd 3 columns: Freq (Fraction), Freq (Decimal), Freq (%).\nInstruction: ${dataA.arrondi.texteConsigne}`, promptText: "", correctionPrompt: "", rawData: { valeurs: dataA.valeurs, effectifs: dataA.effectifs, total: dataA.total, label: dataA.label, frequences: dataA.frequences, arrondi: dataA.arrondi, titre: dataA.titre } };
+    const ex2: ExerciseStep = {
+      id: 2,
+      title: language === 'fr' ? "Calcul de Fréquences" : "Relative Frequencies",
+      description: language === 'fr' ? "Compléter le tableau précédent avec les fréquences." : "Complete the table with relative frequencies.",
+      type: 'frequency',
+      problem: language === 'fr'
+        ? `Reprenons le tableau de l'exercice précédent.\nAjoute 3 colonnes : Fréquence (Fraction), Fréquence (Décimal), Fréquence (%).\nConsigne : Arrondis les fréquences décimales au centième et les fréquences en pourcentage à l'unité.`
+        : `Let's use the previous table.\nAdd 3 columns: Freq (Fraction), Freq (Decimal), Freq (%).\nInstruction: Round decimal frequencies to the hundredth and percentage frequencies to the unit.`,
+      promptText: "",
+      correctionPrompt: "",
+      rawData: { valeurs: dataA.valeurs, effectifs: dataA.effectifs, total: dataA.total, label: dataA.label, frequences: dataA.frequences, arrondi: dataA.arrondi, titre: dataA.titre }
+    };
     const ex3: ExerciseStep = { id: 3, title: `Stats : ${dataB.titre}`, description: "Moyenne, Médiane, Q1, Q3...", type: 'indicators', problem: `Série : ${cleanDataDisplayB}. Calcule tous les indicateurs.`, promptText: "", correctionPrompt: "", rawData: { mean: mean3, median: median3, q1, q3, iqr, unit: dataB.unite } };
     const ex4: ExerciseStep = { id: 4, title: language === 'fr' ? "Résolution de Problème" : "Problem Solving", description: language === 'fr' ? "Interpréter pour choisir." : "Interpret to choose.", type: 'problem', problem: `${s4.goal}`, promptText: `Comparison:\nCompany A: Mean=2500, Med=1800\nCompany B: Mean=2500, Med=2400\nQuestion: "${s4.goal}"`, correctionPrompt: "", rawData: { answerLogic: s4.answerLogic } };
 
