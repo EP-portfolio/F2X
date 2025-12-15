@@ -219,9 +219,15 @@ INSTRUCTIONS SPÉCIFIQUES - CALCUL DE FRÉQUENCES :
    - Les conversions entre fraction, décimal et pourcentage sont-elles cohérentes ?
    - La somme des fréquences est-elle proche de 1 (ou 100%) ?
 
-5. **Feedback** :
+5. **IMPORTANT - Utilisation des fréquences attendues** :
+   - Utilise EXACTEMENT les fréquences attendues ci-dessous pour comparer avec le travail de l'élève
+   - Si tu mentionnes les fréquences correctes dans ton feedback, utilise TOUJOURS les valeurs des fréquences attendues
+   - Les fréquences décimales doivent TOUJOURS être arrondies au CENTIÈME (2 décimales) - jamais plus, jamais moins
+   - Les fréquences en pourcentage doivent TOUJOURS être arrondies à L'UNITÉ (0 décimales)
+
+6. **Feedback** :
    - Si correct : Valide chaque colonne et félicite
-   - Si incorrect : Indique précisément quelles fréquences sont fausses, montre le calcul correct avec les bons arrondis, et explique l'erreur
+   - Si incorrect : Indique précisément quelles fréquences sont fausses, montre le calcul correct avec les EXACTES valeurs des fréquences attendues ci-dessous, et explique l'erreur
 ${frequencesAttendues}
 `;
     } else if (exerciseType === 'indicators') {
@@ -384,9 +390,15 @@ SPECIFIC INSTRUCTIONS - RELATIVE FREQUENCY CALCULATION :
    - Are conversions between fraction, decimal, and percentage consistent?
    - Does the sum of frequencies equal approximately 1 (or 100%)?
 
-5. **Feedback** :
+5. **IMPORTANT - Using expected frequencies** :
+   - Use EXACTLY the expected frequencies below to compare with the student's work
+   - If you mention correct frequencies in your feedback, ALWAYS use the values from the expected frequencies
+   - Decimal frequencies must ALWAYS be rounded to the HUNDREDTH (2 decimals) - never more, never less
+   - Percentage frequencies must ALWAYS be rounded to the UNIT (0 decimals)
+
+6. **Feedback** :
    - If correct : Validate each column and congratulate
-   - If incorrect : Precisely indicate which frequencies are wrong, show the correct calculation with proper rounding, and explain the error
+   - If incorrect : Precisely indicate which frequencies are wrong, show the correct calculation with the EXACT values from the expected frequencies below, and explain the error
 ${frequencesAttendues}
 `;
     } else if (exerciseType === 'indicators') {
