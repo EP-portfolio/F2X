@@ -98,6 +98,7 @@ git push -u origin main
 ```javascript
 window.API_BASE_URL = 'https://statmaster-backend.onrender.com/api';
 ```
+   ⚠️ **Remplacez `statmaster-backend` par le nom réel de votre service backend dans Render**
 
 3. **Poussez sur GitHub** :
 ```bash
@@ -105,6 +106,10 @@ git add config.js
 git commit -m "Add config for Render deployment"
 git push
 ```
+
+   **Note** : Le fichier `config.js` est normalement dans `.gitignore`, mais pour Render, vous devez le versionner. Vous pouvez :
+   - Soit retirer `config.js` de `.gitignore` temporairement
+   - Soit créer le fichier directement dans Render Dashboard (si vous utilisez un build command)
 
 4. **Le frontend se redéploiera automatiquement**
 

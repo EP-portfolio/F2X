@@ -48,11 +48,13 @@ Cliquez sur **"Add Environment Variable"** et ajoutez chacune de ces variables :
      ```
    - Exemple : `aB3dE5fG7hI9jK1lM3nO5pQ7rS9tU1vW3xY5zA7bC9dE1fG3hI5jK7lM9nO1p`
 
-#### Variables Gemini API (OBLIGATOIRE)
+#### Variables Gemini API (OBLIGATOIRE - pour la génération d'exercices)
 
 5. **`GEMINI_API_KEY`**
    - Valeur : `AIza...` (votre clé Gemini)
    - Où trouver : https://aistudio.google.com/app/apikey
+   - ⚠️ **IMPORTANT** : Cette clé est utilisée pour générer les exercices inspirés du Brevet dans la section Évaluation
+   - ✅ **SÉCURISÉE** : La clé reste côté serveur, elle n'est jamais exposée au client
 
 #### Variables Email (OPTIONNEL - pour notifications parents)
 

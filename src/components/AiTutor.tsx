@@ -36,7 +36,7 @@ export const AiTutor: React.FC<AiTutorProps> = ({ language }) => {
     if (!input.trim() || isLoading) return;
     const userMessage = input; setInput(''); setMessages(prev => [...prev, { role: 'user', text: userMessage }]); setIsLoading(true);
     try {
-      const apiKey = process.env.API_KEY; if (!apiKey) throw new Error("API Key missing"); const ai = new GoogleGenAI({ apiKey });
+      const apiKey = (window as any).API_KEY || import.meta.env.VITE_API_KEY; if (!apiKey) throw new Error("API Key missing"); const ai = new GoogleGenAI({ apiKey });
       const systemInstruction = language === 'fr' ? `Tu es un professeur de mathématiques bienveillant pour des élèves de 3ème. Explique simplement.` : `You are a friendly Math teacher for Grade 9 students. Explain simply.`;
       const history = messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }));
       const chat = ai.chats.create({ model: "gemini-2.5-flash", config: { systemInstruction }, history: history });

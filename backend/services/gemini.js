@@ -198,6 +198,113 @@ Be precise and actionable. Focus on identified weaknesses.
   }
 }
 
+/**
+ * Generate new exercise inspired by Brevet examples
+ */
+export async function generateBrevetExercise(rawData, mean, median, language = 'fr') {
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    
+    // Import the prompt generator (we'll need to adapt it for backend)
+    const prompt = generateBrevetExercisePrompt(rawData, mean, median, language);
+    
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Brevet exercise generation error:', error);
+    throw new Error(`Exercise generation error: ${error.message}`);
+  }
+}
+
+/**
+ * Generate answer logic for Brevet exercise
+ */
+export async function generateBrevetAnswer(exerciseProblem, rawData, mean, median, language = 'fr') {
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    
+    const answerPrompt = language === 'fr'
+      ? `Basé sur cet exercice de statistiques : "${exerciseProblem}"
+      
+      Série de données : ${rawData.join(', ')}
+      Moyenne = ${mean}, Médiane = ${median}
+      
+      Donne une réponse correcte et complète à cet exercice. Si l'exercice demande des calculs, fournis-les. Si l'exercice demande une interprétation, explique-la clairement.`
+      : `Based on this statistics exercise: "${exerciseProblem}"
+      
+      Data series: ${rawData.join(', ')}
+      Mean = ${mean}, Median = ${median}
+      
+      Give a correct and complete answer to this exercise. If the exercise asks for calculations, provide them. If the exercise asks for an interpretation, explain it clearly.`;
+    
+    const result = await model.generateContent(answerPrompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Brevet answer generation error:', error);
+    throw new Error(`Answer generation error: ${error.message}`);
+  }
+}
+
+function generateBrevetExercisePrompt(rawData, mean, median, language) {
+  // Simplified version - in production, import from prompts.ts or duplicate the logic
+  const examplesContext = `EXEMPLES D'INSPIRATION (observe leur style, leur structure et leurs types de questions) :
+- Exercices variés du Brevet des Collèges (notes, tailles, temps, etc.)
+- Questions sur moyenne, médiane, étendue, pourcentages, fréquences
+- Contextes réalistes adaptés au niveau 3ème`;
+
+  if (language === 'fr') {
+    return `Tu es un créateur d'exercices de statistiques pour le Brevet des Collèges (niveau 3ème).
+
+TON OBJECTIF : Créer un NOUVEL exercice inspiré des exemples du Brevet, MAIS SANS LES RÉPÉTER.
+
+${examplesContext}
+
+DONNÉES STATISTIQUES DISPONIBLES (tu peux les utiliser ou créer tes propres données) :
+Série de données : ${rawData.join(', ')}
+→ Moyenne = ${mean}, Médiane = ${median}
+
+INSTRUCTIONS :
+1. CRÉE UN NOUVEL EXERCICE : Ne répète AUCUN des exemples. Inspire-toi de leur style, mais invente un contexte et des questions différents.
+2. OBSERVE LES EXEMPLES : Ils sont variés (calculs d'indicateurs, interprétations, pourcentages, impact d'une nouvelle donnée, etc.)
+3. LIBERTÉ CRÉATIVE : Tu peux utiliser les données fournies ou créer tes propres données adaptées à ton contexte
+4. STYLE BREVET : Contexte réaliste, présentation claire des données, questions adaptées au niveau 3ème
+
+FORMAT DE RÉPONSE :
+Retourne UNIQUEMENT l'énoncé complet de l'exercice, sans titre ni numérotation. L'énoncé doit inclure :
+- Le contexte de l'exercice
+- La présentation des données (sous forme de liste, tableau, ou description)
+- Une ou plusieurs questions adaptées au contexte
+
+GÉNÈRE MAINTENANT LE NOUVEL EXERCICE :`;
+  } else {
+    return `You are a statistics exercise creator for 9th Grade students.
+
+YOUR OBJECTIVE: Create a NEW exercise inspired by Brevet examples, BUT WITHOUT REPEATING THEM.
+
+${examplesContext}
+
+AVAILABLE STATISTICAL DATA (you can use them or create your own data):
+Data series: ${rawData.join(', ')}
+→ Mean = ${mean}, Median = ${median}
+
+INSTRUCTIONS:
+1. CREATE A NEW EXERCISE: Do NOT repeat ANY examples. Be inspired by their style, but invent a different context and questions.
+2. OBSERVE THE EXAMPLES: They are varied (indicator calculations, interpretations, percentages, impact of new data, etc.)
+3. CREATIVE FREEDOM: You can use the provided data or create your own data adapted to your context
+4. EXAM STYLE: Realistic context, clear data presentation, questions appropriate for 9th grade
+
+RESPONSE FORMAT:
+Return ONLY the complete exercise statement, without title or numbering. The statement must include:
+- The exercise context
+- Data presentation (as a list, table, or description)
+- One or more questions adapted to the context
+
+GENERATE THE NEW EXERCISE NOW:`;
+  }
+}
+
 function parseRecommendations(text, language) {
   try {
     // Try to extract JSON from text

@@ -442,7 +442,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
     };
     const ex3: ExerciseStep = { id: 3, title: `Stats : ${dataB.titre}`, description: "Moyenne, Médiane, Q1, Q3...", type: 'indicators', problem: `Série : ${cleanDataDisplayB}. Calcule tous les indicateurs.`, promptText: "", correctionPrompt: "", rawData: { mean: mean3, median: median3, q1, q3, iqr, unit: dataB.unite, rawList: dataB.rawList } };
     
-    // Exercice 4 : Générer avec le LLM inspiré des exemples du Brevet
+    // Exercice 4 : Générer avec le LLM inspiré des exemples du Brevet via le backend
     // Utiliser les données de dataB pour avoir une série cohérente
     let ex4Problem = language === 'fr' 
       ? "Chargement de l'exercice..." 
@@ -450,44 +450,45 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
     let ex4AnswerLogic = "";
     
     try {
-      const apiKey = process.env.API_KEY;
-      if (apiKey) {
-        const ai = new GoogleGenAI({ apiKey });
-        const prompt = genererPromptNouvelExerciceBrevet(
-          dataB.rawList,
-          parseFloat(mean3),
-          median3,
-          language
-        );
-        const response = await ai.models.generateContent({ 
-          model: 'gemini-2.5-flash', 
-          contents: prompt 
-        });
-        ex4Problem = response.text || ex4Problem;
+      // Utiliser l'API backend pour sécuriser la clé API
+      const apiBaseUrl = (window as any).API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+      
+      // Générer l'exercice via le backend
+      const exerciseResponse = await fetch(`${apiBaseUrl}/exercises/generate-brevet`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rawData: dataB.rawList,
+          mean: parseFloat(mean3),
+          median: median3,
+          language: language
+        })
+      });
+      
+      if (exerciseResponse.ok) {
+        const exerciseData = await exerciseResponse.json();
+        ex4Problem = exerciseData.problem || ex4Problem;
         
-        // Générer la logique de réponse attendue basée sur l'exercice généré
-        const answerPrompt = language === 'fr'
-          ? `Basé sur cet exercice de statistiques : "${ex4Problem}"
-          
-          Série de données : ${dataB.rawList.join(', ')}
-          Moyenne = ${mean3}, Médiane = ${median3}
-          
-          Donne une réponse correcte et complète à cet exercice. Si l'exercice demande des calculs, fournis-les. Si l'exercice demande une interprétation, explique-la clairement.`
-          : `Based on this statistics exercise: "${ex4Problem}"
-          
-          Data series: ${dataB.rawList.join(', ')}
-          Mean = ${mean3}, Median = ${median3}
-          
-          Give a correct and complete answer to this exercise. If the exercise asks for calculations, provide them. If the exercise asks for an interpretation, explain it clearly.`;
-        
-        const answerResponse = await ai.models.generateContent({ 
-          model: 'gemini-2.5-flash', 
-          contents: answerPrompt 
+        // Générer la réponse via le backend
+        const answerResponse = await fetch(`${apiBaseUrl}/exercises/generate-answer`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            exerciseProblem: ex4Problem,
+            rawData: dataB.rawList,
+            mean: parseFloat(mean3),
+            median: median3,
+            language: language
+          })
         });
-        ex4AnswerLogic = answerResponse.text || "";
+        
+        if (answerResponse.ok) {
+          const answerData = await answerResponse.json();
+          ex4AnswerLogic = answerData.answerLogic || "";
+        }
       }
     } catch (e) {
-      console.error("Failed to generate Brevet exercise", e);
+      console.error("Failed to generate Brevet exercise via backend", e);
       // Fallback vers un exercice simple
       const scenarioFr = { context: "Salaires", itemA: "Entreprise A", itemB: "Entreprise B", goal: "Si tu veux gagner plus de 2000€, quelle entreprise choisir ?", answerLogic: "L'Entreprise B car la médiane est 2400 (50% gagnent plus), contre 1800 pour A." };
       const scenarioEn = { context: "Salaries", itemA: "Company A", itemB: "Company B", goal: "If you want to earn more than $2000, which company should you choose?", answerLogic: "Company B because the median is 2400 (50% earn more), vs 1800 for A." };
@@ -545,7 +546,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
       if (currentExercise.type !== 'table' && currentExercise.type !== 'frequency') return;
       setIsEnriching(true);
       try {
-        const apiKey = process.env.API_KEY;
+        const apiKey = (window as any).API_KEY || import.meta.env.VITE_API_KEY;
         if (!apiKey) throw new Error("API Key missing");
         const ai = new GoogleGenAI({ apiKey });
         const prompt = genererPromptEnonce(currentExercise.rawData, language);
@@ -649,7 +650,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
     setIsGeneratingCorrection(true);
 
     try {
-      const apiKey = process.env.API_KEY;
+      const apiKey = (window as any).API_KEY || import.meta.env.VITE_API_KEY;
       if (!apiKey) throw new Error("Clé API manquante");
 
       const ai = new GoogleGenAI({ apiKey });
