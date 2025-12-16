@@ -203,7 +203,7 @@ Be precise and actionable. Focus on identified weaknesses.
  */
 export async function generateBrevetExercise(rawData, mean, median, language = 'fr') {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
     // Import the prompt generator (we'll need to adapt it for backend)
     const prompt = generateBrevetExercisePrompt(rawData, mean, median, language);
@@ -222,7 +222,7 @@ export async function generateBrevetExercise(rawData, mean, median, language = '
  */
 export async function generateBrevetAnswer(exerciseProblem, rawData, mean, median, language = 'fr') {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
     const answerPrompt = language === 'fr'
       ? `Basé sur cet exercice de statistiques : "${exerciseProblem}"
@@ -248,33 +248,78 @@ export async function generateBrevetAnswer(exerciseProblem, rawData, mean, media
 }
 
 function generateBrevetExercisePrompt(rawData, mean, median, language) {
-  // Simplified version - in production, import from prompts.ts or duplicate the logic
-  const examplesContext = `EXEMPLES D'INSPIRATION (observe leur style, leur structure et leurs types de questions) :
-- Exercices variés du Brevet des Collèges (notes, tailles, temps, etc.)
-- Questions sur moyenne, médiane, étendue, pourcentages, fréquences
-- Contextes réalistes adaptés au niveau 3ème`;
+  // Exemples variés du Brevet pour inspiration (basés sur les vrais exercices)
+  const examples = [
+    {
+      context: "Un professeur de SVT demande aux 25 élèves d'une classe de 3ème de faire germer des graines de blé chez eux. Le tableau donne les tailles des plantules à 10 jours : 8cm(2), 9cm(3), 10cm(5), 11cm(6), 12cm(4), 13cm(3), 14cm(2)",
+      questions: ["Combien de plantules ont une taille qui mesure au plus 11 cm ?", "Calculer l'étendue de cette série.", "Calculer la moyenne. Arrondir au dixième.", "Déterminer la médiane. Justifier. Interpréter le résultat.", "Quel pourcentage des élèves a bien respecté le protocole ?"]
+    },
+    {
+      context: "Afin de surveiller la bonne santé des tortues vertes à Madagascar, elles sont régulièrement pesées. Voici les données relevées par un scientifique en mai 2021. Tableau : 7 tortues marquées avec leur masse en kg (113, 96, 125, 87, 117, 104, 101)",
+      questions: ["Calculer l'étendue de cette série statistique.", "Calculer la masse moyenne. Arrondir à l'unité.", "Déterminer la médiane. Interpréter le résultat.", "Est-il vrai que les mâles représentent moins de 20% de cet échantillon ?"]
+    },
+    {
+      context: "En météorologie, l'insolation est le nombre d'heures d'ensoleillement. Données d'insolation pour le mois de juillet sur plusieurs années à une station météo : 324, 325, 257, 234, 285, 261, 213, 226, 308, 259, 206 heures",
+      questions: ["Calculer la moyenne d'insolation sur cette période. Arrondir à l'heure près.", "Peut-on dire que la valeur 259 est la médiane de cette série ? Justifier."]
+    },
+    {
+      context: "A la sortie d'une agglomération, on a relevé la répartition par tranches horaires des 6400 véhicules quittant la ville entre 16 heures et 22 heures. 16h-17h(1100), 17h-18h(2000), 18h-19h(1600), 19h-20h(900), 20h-21h(450), 21h-22h(350)",
+      questions: ["Représenter l'histogramme des effectifs.", "Calculer la fréquence de la tranche horaire 19h-20h. Arrondir à 0,01 près, puis donner le pourcentage.", "Calculer le pourcentage de véhicules quittant la ville entre 16h et 20h."]
+    },
+    {
+      context: "Le tableau ci-dessous donne la répartition des notes obtenues à un contrôle de mathématiques par les 27 élèves d'une classe de troisième. Notes : 6(3), 8(5), 10(6), 13(7), 14(5), 17(1)",
+      questions: ["Calculer la note moyenne de la classe. Arrondir à l'unité.", "Calculer le pourcentage d'élèves ayant eu une note supérieure ou égale à 10. Arrondir au dixième."]
+    },
+    {
+      context: "Le groupe des onze latinistes de la 3ème B du collège a obtenu les notes suivantes à un devoir : 7, 9, 9.5, 9.5, 10, 10, 12, 14, 16, 16, 19",
+      questions: ["Calculer la moyenne du groupe.", "Déterminer la médiane de cette série."]
+    }
+  ];
+
+  const randomExamples = examples.sort(() => Math.random() - 0.5).slice(0, 3);
+  const examplesText = randomExamples.map((ex, i) => 
+    `EXEMPLE ${i + 1} :
+Contexte : ${ex.context}
+Questions typiques : ${ex.questions.join(', ')}`
+  ).join('\n\n');
 
   if (language === 'fr') {
     return `Tu es un créateur d'exercices de statistiques pour le Brevet des Collèges (niveau 3ème).
 
-TON OBJECTIF : Créer un NOUVEL exercice inspiré des exemples du Brevet, MAIS SANS LES RÉPÉTER.
+TON OBJECTIF : Créer un NOUVEL exercice inspiré des exemples du Brevet ci-dessous, MAIS SANS LES RÉPÉTER.
 
-${examplesContext}
+EXEMPLES D'INSPIRATION (observe leur style, leur structure et leurs types de questions) :
+${examplesText}
 
-DONNÉES STATISTIQUES DISPONIBLES (tu peux les utiliser ou créer tes propres données) :
+DONNÉES STATISTIQUES DISPONIBLES (tu peux les utiliser ou créer tes propres données adaptées à ton contexte) :
 Série de données : ${rawData.join(', ')}
 → Moyenne = ${mean}, Médiane = ${median}
 
-INSTRUCTIONS :
-1. CRÉE UN NOUVEL EXERCICE : Ne répète AUCUN des exemples. Inspire-toi de leur style, mais invente un contexte et des questions différents.
-2. OBSERVE LES EXEMPLES : Ils sont variés (calculs d'indicateurs, interprétations, pourcentages, impact d'une nouvelle donnée, etc.)
-3. LIBERTÉ CRÉATIVE : Tu peux utiliser les données fournies ou créer tes propres données adaptées à ton contexte
-4. STYLE BREVET : Contexte réaliste, présentation claire des données, questions adaptées au niveau 3ème
+INSTRUCTIONS CRITIQUES :
+1. CRÉE UN NOUVEL EXERCICE : Ne répète AUCUN des exemples ci-dessus. Inspire-toi de leur style, mais invente un contexte, des données et des questions complètement différents.
+
+2. OBSERVE LES EXEMPLES : Ils sont variés :
+   - Certains demandent de calculer des indicateurs (moyenne, médiane, étendue)
+   - D'autres demandent des interprétations
+   - Certains calculent des pourcentages
+   - D'autres analysent l'impact d'une nouvelle donnée
+   - Certains comparent deux situations (mais pas toujours)
+
+3. LIBERTÉ CRÉATIVE : Tu peux :
+   - Utiliser les données fournies ou créer tes propres données adaptées à ton contexte
+   - Choisir le type de question qui correspond à ton exercice (calcul, interprétation, pourcentage, etc.)
+   - Varier les contextes (notes, tailles, temps, quantités, sciences, sport, vie quotidienne, etc.)
+
+4. STYLE BREVET :
+   - Contexte réaliste et clair
+   - Présentation des données (liste, tableau, ou description)
+   - Questions adaptées au niveau 3ème
+   - Vocabulaire scolaire et précis
 
 FORMAT DE RÉPONSE :
 Retourne UNIQUEMENT l'énoncé complet de l'exercice, sans titre ni numérotation. L'énoncé doit inclure :
-- Le contexte de l'exercice
-- La présentation des données (sous forme de liste, tableau, ou description)
+- Le contexte de l'exercice (situation réaliste)
+- La présentation des données (sous forme de liste, tableau, ou description claire)
 - Une ou plusieurs questions adaptées au contexte
 
 GÉNÈRE MAINTENANT LE NOUVEL EXERCICE :`;
@@ -283,22 +328,38 @@ GÉNÈRE MAINTENANT LE NOUVEL EXERCICE :`;
 
 YOUR OBJECTIVE: Create a NEW exercise inspired by Brevet examples, BUT WITHOUT REPEATING THEM.
 
-${examplesContext}
+INSPIRATION EXAMPLES (observe their style, structure, and types of questions):
+${examplesText}
 
-AVAILABLE STATISTICAL DATA (you can use them or create your own data):
+AVAILABLE STATISTICAL DATA (you can use them or create your own data adapted to your context):
 Data series: ${rawData.join(', ')}
 → Mean = ${mean}, Median = ${median}
 
-INSTRUCTIONS:
-1. CREATE A NEW EXERCISE: Do NOT repeat ANY examples. Be inspired by their style, but invent a different context and questions.
-2. OBSERVE THE EXAMPLES: They are varied (indicator calculations, interpretations, percentages, impact of new data, etc.)
-3. CREATIVE FREEDOM: You can use the provided data or create your own data adapted to your context
-4. EXAM STYLE: Realistic context, clear data presentation, questions appropriate for 9th grade
+CRITICAL INSTRUCTIONS:
+1. CREATE A NEW EXERCISE: Do NOT repeat ANY of the examples above. Be inspired by their style, but invent a completely different context, data, and questions.
+
+2. OBSERVE THE EXAMPLES: They are varied:
+   - Some ask to calculate indicators (mean, median, range)
+   - Others ask for interpretations
+   - Some calculate percentages
+   - Others analyze the impact of a new data point
+   - Some compare two situations (but not always)
+
+3. CREATIVE FREEDOM: You can:
+   - Use the provided data or create your own data adapted to your context
+   - Choose the type of question that fits your exercise (calculation, interpretation, percentage, etc.)
+   - Vary the contexts (grades, sizes, time, quantities, science, sports, daily life, etc.)
+
+4. EXAM STYLE:
+   - Realistic and clear context
+   - Data presentation (list, table, or description)
+   - Questions appropriate for 9th grade
+   - Formal and precise vocabulary
 
 RESPONSE FORMAT:
 Return ONLY the complete exercise statement, without title or numbering. The statement must include:
-- The exercise context
-- Data presentation (as a list, table, or description)
+- The exercise context (realistic situation)
+- Data presentation (as a list, table, or clear description)
 - One or more questions adapted to the context
 
 GENERATE THE NEW EXERCISE NOW:`;

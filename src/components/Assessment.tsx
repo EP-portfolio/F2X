@@ -453,48 +453,83 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
       // Utiliser l'API backend pour sécuriser la clé API
       const apiBaseUrl = (window as any).API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
       
-      // Générer l'exercice via le backend
-      const exerciseResponse = await fetch(`${apiBaseUrl}/exercises/generate-brevet`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          rawData: dataB.rawList,
-          mean: parseFloat(mean3),
-          median: median3,
-          language: language
-        })
-      });
+      console.log('Generating exercise via backend:', apiBaseUrl);
       
-      if (exerciseResponse.ok) {
-        const exerciseData = await exerciseResponse.json();
-        ex4Problem = exerciseData.problem || ex4Problem;
-        
-        // Générer la réponse via le backend
-        const answerResponse = await fetch(`${apiBaseUrl}/exercises/generate-answer`, {
+      // Générer l'exercice via le backend avec timeout
+      const exerciseResponse = await Promise.race([
+        fetch(`${apiBaseUrl}/exercises/generate-brevet`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            exerciseProblem: ex4Problem,
             rawData: dataB.rawList,
             mean: parseFloat(mean3),
             median: median3,
             language: language
           })
-        });
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 30000))
+      ]) as Response;
+      
+      if (exerciseResponse.ok) {
+        const exerciseData = await exerciseResponse.json();
+        ex4Problem = exerciseData.problem || ex4Problem;
+        console.log('Exercise generated:', ex4Problem.substring(0, 100));
+        
+        // Générer la réponse via le backend avec timeout
+        const answerResponse = await Promise.race([
+          fetch(`${apiBaseUrl}/exercises/generate-answer`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              exerciseProblem: ex4Problem,
+              rawData: dataB.rawList,
+              mean: parseFloat(mean3),
+              median: median3,
+              language: language
+            })
+          }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 30000))
+        ]) as Response;
         
         if (answerResponse.ok) {
           const answerData = await answerResponse.json();
           ex4AnswerLogic = answerData.answerLogic || "";
+          console.log('Answer generated successfully');
+        } else {
+          const errorData = await answerResponse.json().catch(() => ({}));
+          console.error('Answer generation failed:', answerResponse.status, errorData);
         }
+      } else {
+        const errorData = await exerciseResponse.json().catch(() => ({}));
+        console.error('Exercise generation failed:', exerciseResponse.status, errorData);
+        throw new Error(`Backend error: ${exerciseResponse.status}`);
       }
     } catch (e) {
       console.error("Failed to generate Brevet exercise via backend", e);
-      // Fallback vers un exercice simple
-      const scenarioFr = { context: "Salaires", itemA: "Entreprise A", itemB: "Entreprise B", goal: "Si tu veux gagner plus de 2000€, quelle entreprise choisir ?", answerLogic: "L'Entreprise B car la médiane est 2400 (50% gagnent plus), contre 1800 pour A." };
-      const scenarioEn = { context: "Salaries", itemA: "Company A", itemB: "Company B", goal: "If you want to earn more than $2000, which company should you choose?", answerLogic: "Company B because the median is 2400 (50% earn more), vs 1800 for A." };
-      const s4 = language === 'fr' ? scenarioFr : scenarioEn;
-      ex4Problem = s4.goal;
-      ex4AnswerLogic = s4.answerLogic;
+      // Fallback vers des exercices variés inspirés du Brevet
+      const fallbackExercises = language === 'fr' ? [
+        {
+          problem: `Un professeur de SVT a mesuré les tailles de ${dataB.rawList.length} plantules après 10 jours de croissance.\nDonnées : ${dataB.rawList.join(', ')} cm\n\n1. Calcule la taille moyenne de ces plantules. Arrondis à l'unité.\n2. Détermine la médiane de cette série. Interprète le résultat.`,
+          answerLogic: `1. Taille moyenne = ${mean3} cm (arrondi à l'unité)\n2. Médiane = ${median3} cm. Cela signifie que la moitié des plantules mesurent moins de ${median3} cm et l'autre moitié mesure plus de ${median3} cm.`
+        },
+        {
+          problem: `Un scientifique a relevé les masses de ${dataB.rawList.length} animaux d'une même espèce.\nDonnées : ${dataB.rawList.join(', ')} kg\n\n1. Calcule l'étendue de cette série.\n2. Calcule la masse moyenne. Arrondis à l'unité.\n3. Détermine la médiane et interprète le résultat.`,
+          answerLogic: `1. Étendue = ${Math.max(...dataB.rawList) - Math.min(...dataB.rawList)} kg\n2. Masse moyenne = ${mean3} kg (arrondi à l'unité)\n3. Médiane = ${median3} kg. La moitié des animaux pèsent moins de ${median3} kg, l'autre moitié pèse plus.`
+        },
+        {
+          problem: `Voici les notes obtenues par les ${dataB.rawList.length} élèves d'une classe lors d'un contrôle.\nNotes : ${dataB.rawList.join(', ')}\n\n1. Calcule la note moyenne de la classe. Arrondis à l'unité.\n2. Détermine la médiane de cette série. Justifie.`,
+          answerLogic: `1. Note moyenne = ${mean3} (arrondi à l'unité)\n2. Médiane = ${median3}. Pour justifier, on range les notes dans l'ordre croissant et on prend la valeur centrale.`
+        }
+      ] : [
+        {
+          problem: `A science teacher measured the sizes of ${dataB.rawList.length} seedlings after 10 days of growth.\nData: ${dataB.rawList.join(', ')} cm\n\n1. Calculate the average size. Round to the nearest unit.\n2. Determine the median and interpret the result.`,
+          answerLogic: `1. Average size = ${mean3} cm (rounded to the nearest unit)\n2. Median = ${median3} cm. This means half of the seedlings measure less than ${median3} cm and the other half measure more.`
+        }
+      ];
+      
+      const randomFallback = fallbackExercises[Math.floor(Math.random() * fallbackExercises.length)];
+      ex4Problem = randomFallback.problem;
+      ex4AnswerLogic = randomFallback.answerLogic;
     }
     
     const ex4: ExerciseStep = { 
