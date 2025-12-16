@@ -1,5 +1,6 @@
 import { ExerciseData } from './exerciseGenerator';
 import { Language } from '../types';
+import { getVariedBrevetExamples, BrevetExample } from './brevetContext';
 
 // ============================================================
 // CONTEXTE FEW-SHOT (FRANCAIS)
@@ -606,21 +607,53 @@ EXPECTED RESULTS (for reference) :
             }
          }
       } else if (exerciseType === 'problem') {
+         let problemData = '';
+         if (rawData?.rawList) {
+            problemData = `
+DATA FROM THE PROBLEM :
+- Data series: ${rawData.rawList.join(', ')}
+  → Mean = ${rawData.mean || 'N/A'}, Median = ${rawData.median || 'N/A'}
+`;
+         }
+         
+         let expectedAnswer = '';
+         if (rawData?.answerLogic) {
+            expectedAnswer = `
+EXPECTED ANSWER AND REASONING (for reference) :
+${rawData.answerLogic}
+`;
+         }
+         
          specificInstructions = `
 SPECIFIC INSTRUCTIONS - PROBLEM SOLVING :
+${problemData}
+${expectedAnswer}
 1. **Answer analysis** :
    - Identify the student's final answer
-   - Verify if the student chose the correct option (if applicable)
+   - Verify if the student's answer is correct based on the exercise requirements
    - Analyze the reasoning and justifications provided
 
 2. **Reasoning verification** :
-   - Did the student use the correct statistical indicators?
+   - Did the student use the correct statistical indicators if required (mean, median, range, percentages, etc.)?
+   - Are the calculations correct if the exercise asks for calculations?
    - Is the reasoning logical and coherent?
-   - Are justifications relevant?
+   - Are justifications relevant and well-explained?
+   - Did the student correctly interpret the statistical results?
 
-3. **Feedback** :
-   - If correct : Congratulate and validate the reasoning
-   - If incorrect : Explain why the answer is wrong, indicate the correct answer, and guide the student toward correct reasoning
+3. **Statistical concepts** :
+   - Mean represents the average value
+   - Median represents the middle value (50% above, 50% below)
+   - Range represents the spread of data
+   - Percentages represent proportions
+   - The student should use appropriate indicators based on what the exercise asks
+
+4. **Feedback** :
+   - If correct : Congratulate and validate the reasoning, confirm that the statistical concepts were used correctly
+   - If incorrect : 
+     * Explain why the answer is wrong
+     * Indicate the correct answer and reasoning (use the expected answer above as reference)
+     * Guide the student toward correct reasoning
+     * Help them understand the statistical concepts involved
 `;
       }
 
@@ -633,5 +666,111 @@ EXPECTED RESPONSE FORMAT :
 - Be encouraging and pedagogical
 - Use bullets (*) to structure your response
 `;
+   }
+}
+
+/**
+ * Génère un prompt pour créer un nouvel exercice de résolution de problème
+ * inspiré des exemples du Brevet, sans les répéter
+ */
+export function genererPromptNouvelExerciceBrevet(
+   rawData: number[],
+   mean: number,
+   median: number,
+   language: Language = 'fr'
+): string {
+   const examples = getVariedBrevetExamples(4);
+   
+   const examplesContext = examples.map(ex => {
+      const questions = ex.questions.map((q, i) => `${i + 1}. ${q}`).join('\n');
+      return `
+EXEMPLE ${ex.id} (${ex.source}) :
+${ex.context}
+
+Questions :
+${questions}
+`;
+   }).join('\n---\n');
+
+   if (language === 'fr') {
+      return `Tu es un créateur d'exercices de statistiques pour le Brevet des Collèges (niveau 3ème).
+
+TON OBJECTIF : Créer un NOUVEL exercice inspiré des exemples du Brevet ci-dessous, MAIS SANS LES RÉPÉTER.
+
+EXEMPLES D'INSPIRATION (observe leur style, leur structure et leurs types de questions) :
+${examplesContext}
+
+DONNÉES STATISTIQUES DISPONIBLES (tu peux les utiliser ou créer tes propres données) :
+Série de données : ${rawData.join(', ')}
+→ Moyenne = ${mean}, Médiane = ${median}
+
+INSTRUCTIONS :
+1. **CRÉE UN NOUVEL EXERCICE** : Ne répète AUCUN des exemples ci-dessus. Inspire-toi de leur style, mais invente un contexte et des questions différents.
+
+2. **OBSERVE LES EXEMPLES** : Ils sont variés :
+   - Certains demandent de calculer des indicateurs (moyenne, médiane, étendue)
+   - D'autres demandent des interprétations
+   - Certains calculent des pourcentages
+   - D'autres analysent l'impact d'une nouvelle donnée
+   - Certains comparent deux situations (mais pas toujours)
+
+3. **LIBERTÉ CRÉATIVE** : Tu peux :
+   - Utiliser les données fournies ou créer tes propres données adaptées à ton contexte
+   - Choisir le type de question qui correspond à ton exercice (calcul, interprétation, pourcentage, etc.)
+   - Varier les contextes (notes, tailles, temps, quantités, sciences, sport, vie quotidienne, etc.)
+
+4. **STYLE BREVET** :
+   - Contexte réaliste et clair
+   - Présentation des données (liste, tableau, ou description)
+   - Questions adaptées au niveau 3ème
+   - Vocabulaire scolaire et précis
+
+FORMAT DE RÉPONSE :
+Retourne UNIQUEMENT l'énoncé complet de l'exercice, sans titre ni numérotation. L'énoncé doit inclure :
+- Le contexte de l'exercice
+- La présentation des données (sous forme de liste, tableau, ou description)
+- Une ou plusieurs questions adaptées au contexte
+
+GÉNÈRE MAINTENANT LE NOUVEL EXERCICE :`;
+   } else {
+      return `You are a statistics exercise creator for 9th Grade (Year 10 / 3ème) students.
+
+YOUR OBJECTIVE: Create a NEW exercise inspired by the Brevet examples below, BUT WITHOUT REPEATING THEM.
+
+INSPIRATION EXAMPLES (observe their style, structure, and types of questions):
+${examplesContext}
+
+AVAILABLE STATISTICAL DATA (you can use them or create your own data):
+Data series: ${rawData.join(', ')}
+→ Mean = ${mean}, Median = ${median}
+
+INSTRUCTIONS:
+1. **CREATE A NEW EXERCISE**: Do NOT repeat ANY of the examples above. Be inspired by their style, but invent a different context and questions.
+
+2. **OBSERVE THE EXAMPLES**: They are varied:
+   - Some ask to calculate indicators (mean, median, range)
+   - Others ask for interpretations
+   - Some calculate percentages
+   - Others analyze the impact of a new data point
+   - Some compare two situations (but not always)
+
+3. **CREATIVE FREEDOM**: You can:
+   - Use the provided data or create your own data adapted to your context
+   - Choose the type of question that fits your exercise (calculation, interpretation, percentage, etc.)
+   - Vary the contexts (grades, sizes, time, quantities, science, sports, daily life, etc.)
+
+4. **EXAM STYLE**:
+   - Realistic and clear context
+   - Data presentation (list, table, or description)
+   - Questions appropriate for 9th grade
+   - Formal and precise vocabulary
+
+RESPONSE FORMAT:
+Return ONLY the complete exercise statement, without title or numbering. The statement must include:
+- The exercise context
+- Data presentation (as a list, table, or description)
+- One or more questions adapted to the context
+
+GENERATE THE NEW EXERCISE NOW:`;
    }
 }

@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import html2canvas from 'html2canvas';
 import { Camera, CheckCircle, AlertCircle, FileText, ChevronRight, Mail, RefreshCw, Eye, Star, Sparkles, ClipboardList } from 'lucide-react';
 import { generateExerciseData } from '../utils/exerciseGenerator';
-import { genererPromptEnonce, genererPromptCorrection, genererPromptAnalyse } from '../utils/prompts';
+import { genererPromptEnonce, genererPromptCorrection, genererPromptAnalyse, genererPromptNouvelExerciceBrevet } from '../utils/prompts';
 import { Language } from '../types';
 
 // --- TYPES & HELPERS IDENTIQUES ---
@@ -183,8 +183,52 @@ const generateNotebookImage = async (exercise: ExerciseStep, language: Language)
     });
     content.appendChild(ul);
   } else if (exercise.type === 'problem') {
-    const { answerLogic } = exercise.rawData;
-    const p = document.createElement('p'); p.textContent = answerLogic; p.style.color = '#1a237e'; content.appendChild(p);
+    const { answerLogic, rawList, mean, median, unit } = exercise.rawData;
+    
+    // Afficher les données si disponibles
+    if (rawList) {
+      const dataDiv = document.createElement('div');
+      dataDiv.style.marginBottom = '20px';
+      
+      const dataTitle = document.createElement('strong');
+      dataTitle.textContent = language === 'fr' ? 'Données : ' : 'Data: ';
+      dataTitle.style.color = '#1a237e';
+      dataDiv.appendChild(dataTitle);
+      
+      const dataText = document.createElement('span');
+      dataText.textContent = rawList.join(', ');
+      dataText.style.color = '#333';
+      dataDiv.appendChild(dataText);
+      
+      if (mean !== undefined && median !== undefined) {
+        const stats = document.createElement('div');
+        stats.style.marginLeft = '20px';
+        stats.style.marginTop = '5px';
+        stats.style.color = '#555';
+        stats.style.fontSize = '18px';
+        stats.textContent = language === 'fr' 
+          ? `→ Moyenne = ${mean}${unit ? ' ' + unit : ''}, Médiane = ${median}${unit ? ' ' + unit : ''}`
+          : `→ Mean = ${mean}${unit ? ' ' + unit : ''}, Median = ${median}${unit ? ' ' + unit : ''}`;
+        dataDiv.appendChild(stats);
+      }
+      
+      content.appendChild(dataDiv);
+    }
+    
+    // Afficher la correction
+    const correctionTitle = document.createElement('h3');
+    correctionTitle.textContent = language === 'fr' ? 'Correction :' : 'Correction:';
+    correctionTitle.style.color = '#1a237e';
+    correctionTitle.style.marginTop = '20px';
+    correctionTitle.style.marginBottom = '10px';
+    content.appendChild(correctionTitle);
+    
+    const p = document.createElement('p');
+    p.textContent = answerLogic || '';
+    p.style.color = '#1a237e';
+    p.style.lineHeight = '1.6';
+    p.style.whiteSpace = 'pre-line';
+    content.appendChild(p);
   }
   container.appendChild(content); document.body.appendChild(container); await document.fonts.ready;
   try {
@@ -368,10 +412,13 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
   const [indicatorsInputs, setIndicatorsInputs] = useState<Record<number, { mean: string; median: string; q1: string; q3: string; iqr: string }>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { generateRandomExercises(); }, [language]);
+  useEffect(() => { 
+    generateRandomExercises().catch(err => {
+      console.error("Error generating exercises", err);
+    });
+  }, [language]);
 
-  const generateRandomExercises = () => {
-    // ... Logic remains exactly the same ...
+  const generateRandomExercises = async () => {
     const dataA = generateExerciseData(language);
     const cleanDataDisplayA = dataA.rawList.join(', ');
     const dataB = generateExerciseData(language);
@@ -379,10 +426,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
     const mean3 = getMean(dataB.rawList);
     const median3 = getMedian(dataB.rawList);
     const { q1, q3, iqr } = getQuartiles(dataB.rawList);
-    const scenarioFr = { context: "Salaires", itemA: "Entreprise A", itemB: "Entreprise B", goal: "Si tu veux gagner plus de 2000€, quelle entreprise choisir ?", answerLogic: "L'Entreprise B car la médiane est 2400 (50% gagnent plus), contre 1800 pour A." };
-    const scenarioEn = { context: "Salaries", itemA: "Company A", itemB: "Company B", goal: "If you want to earn more than $2000, which company should you choose?", answerLogic: "Company B because the median is 2400 (50% earn more), vs 1800 for A." };
-    const s4 = language === 'fr' ? scenarioFr : scenarioEn;
-
+    
     const ex1: ExerciseStep = { id: 1, title: language === 'fr' ? `Tableau : ${dataA.titre}` : `Table: ${dataA.titre}`, description: language === 'fr' ? "Regrouper les données brutes dans un tableau d'effectifs." : "Group raw data into a frequency table.", type: 'table', problem: language === 'fr' ? `Sondage sur "${dataA.titre}".\nDonnées brutes : ${cleanDataDisplayA}.\n\nConstruis le tableau des effectifs en regroupant les valeurs.` : `Survey on "${dataA.titre}".\nRaw Data: ${cleanDataDisplayA}.\n\nBuild the frequency table by grouping values.`, promptText: "", correctionPrompt: "", rawData: { valeurs: dataA.valeurs, effectifs: dataA.effectifs, total: dataA.total, label: dataA.label, frequences: dataA.frequences, arrondi: dataA.arrondi, titre: dataA.titre } };
     const ex2: ExerciseStep = {
       id: 2,
@@ -397,7 +441,77 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
       rawData: { valeurs: dataA.valeurs, effectifs: dataA.effectifs, total: dataA.total, label: dataA.label, frequences: dataA.frequences, arrondi: dataA.arrondi, titre: dataA.titre }
     };
     const ex3: ExerciseStep = { id: 3, title: `Stats : ${dataB.titre}`, description: "Moyenne, Médiane, Q1, Q3...", type: 'indicators', problem: `Série : ${cleanDataDisplayB}. Calcule tous les indicateurs.`, promptText: "", correctionPrompt: "", rawData: { mean: mean3, median: median3, q1, q3, iqr, unit: dataB.unite, rawList: dataB.rawList } };
-    const ex4: ExerciseStep = { id: 4, title: language === 'fr' ? "Résolution de Problème" : "Problem Solving", description: language === 'fr' ? "Interpréter pour choisir." : "Interpret to choose.", type: 'problem', problem: `${s4.goal}`, promptText: `Comparison:\nCompany A: Mean=2500, Med=1800\nCompany B: Mean=2500, Med=2400\nQuestion: "${s4.goal}"`, correctionPrompt: "", rawData: { answerLogic: s4.answerLogic } };
+    
+    // Exercice 4 : Générer avec le LLM inspiré des exemples du Brevet
+    // Utiliser les données de dataB pour avoir une série cohérente
+    let ex4Problem = language === 'fr' 
+      ? "Chargement de l'exercice..." 
+      : "Loading exercise...";
+    let ex4AnswerLogic = "";
+    
+    try {
+      const apiKey = process.env.API_KEY;
+      if (apiKey) {
+        const ai = new GoogleGenAI({ apiKey });
+        const prompt = genererPromptNouvelExerciceBrevet(
+          dataB.rawList,
+          parseFloat(mean3),
+          median3,
+          language
+        );
+        const response = await ai.models.generateContent({ 
+          model: 'gemini-2.5-flash', 
+          contents: prompt 
+        });
+        ex4Problem = response.text || ex4Problem;
+        
+        // Générer la logique de réponse attendue basée sur l'exercice généré
+        const answerPrompt = language === 'fr'
+          ? `Basé sur cet exercice de statistiques : "${ex4Problem}"
+          
+          Série de données : ${dataB.rawList.join(', ')}
+          Moyenne = ${mean3}, Médiane = ${median3}
+          
+          Donne une réponse correcte et complète à cet exercice. Si l'exercice demande des calculs, fournis-les. Si l'exercice demande une interprétation, explique-la clairement.`
+          : `Based on this statistics exercise: "${ex4Problem}"
+          
+          Data series: ${dataB.rawList.join(', ')}
+          Mean = ${mean3}, Median = ${median3}
+          
+          Give a correct and complete answer to this exercise. If the exercise asks for calculations, provide them. If the exercise asks for an interpretation, explain it clearly.`;
+        
+        const answerResponse = await ai.models.generateContent({ 
+          model: 'gemini-2.5-flash', 
+          contents: answerPrompt 
+        });
+        ex4AnswerLogic = answerResponse.text || "";
+      }
+    } catch (e) {
+      console.error("Failed to generate Brevet exercise", e);
+      // Fallback vers un exercice simple
+      const scenarioFr = { context: "Salaires", itemA: "Entreprise A", itemB: "Entreprise B", goal: "Si tu veux gagner plus de 2000€, quelle entreprise choisir ?", answerLogic: "L'Entreprise B car la médiane est 2400 (50% gagnent plus), contre 1800 pour A." };
+      const scenarioEn = { context: "Salaries", itemA: "Company A", itemB: "Company B", goal: "If you want to earn more than $2000, which company should you choose?", answerLogic: "Company B because the median is 2400 (50% earn more), vs 1800 for A." };
+      const s4 = language === 'fr' ? scenarioFr : scenarioEn;
+      ex4Problem = s4.goal;
+      ex4AnswerLogic = s4.answerLogic;
+    }
+    
+    const ex4: ExerciseStep = { 
+      id: 4, 
+      title: language === 'fr' ? "Résolution de Problème" : "Problem Solving", 
+      description: language === 'fr' ? "Interpréter et résoudre." : "Interpret and solve.", 
+      type: 'problem', 
+      problem: ex4Problem, 
+      promptText: `Exercise:\nData: ${dataB.rawList.join(', ')}\nMean=${mean3}, Median=${median3}\nProblem: "${ex4Problem}"`, 
+      correctionPrompt: "", 
+      rawData: { 
+        answerLogic: ex4AnswerLogic,
+        rawList: dataB.rawList,
+        mean: parseFloat(mean3),
+        median: median3,
+        unit: dataB.unite
+      } 
+    };
 
     setExercises([ex1, ex2, ex3, ex4]);
     setGeneratedProblemImages({});
@@ -407,7 +521,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
     setReportReady(false);
     // init modes/inputs
     const initialModes: Record<number, 'photo' | 'manual'> = {};
-    const initialInputs: Record<number, { effectifs: string[]; freqDec: string[]; freqPct: string[] }> = {};
+    const initialInputs: Record<number, { effectifs: string[]; freqFrac: string[]; freqDec: string[]; freqPct: string[] }> = {};
     [ex1, ex2].forEach((ex) => {
       initialModes[ex.id] = 'photo';
       initialInputs[ex.id] = {
