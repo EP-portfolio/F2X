@@ -31,6 +31,11 @@ export const AiTutor: React.FC<AiTutorProps> = ({ language }) => {
     });
   };
 
+  const normalizeApiBase = (base: string) => {
+    if (!base) return '';
+    return base.endsWith('/api') || base.endsWith('/api/') ? base.replace(/\/$/, '') : `${base.replace(/\/$/, '')}/api`;
+  };
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
     const userMessage = input;
@@ -45,8 +50,9 @@ export const AiTutor: React.FC<AiTutorProps> = ({ language }) => {
         defaultBackend ||
         `${window.location.origin}/api` ||
         'http://localhost:3000/api';
+      const apiBase = normalizeApiBase(apiBaseUrl) || defaultBackend;
       const historyPayload = messages.map(m => ({ role: m.role, text: m.text }));
-      const resp = await fetch(`${apiBaseUrl}/tutor/chat`, {
+      const resp = await fetch(`${apiBase}/tutor/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
