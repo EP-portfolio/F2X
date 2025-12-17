@@ -3,13 +3,15 @@ import { GoogleGenAI } from "@google/genai";
 
 const getApiBaseUrl = () => {
   const defaultBackend = 'https://f2x-o81l.onrender.com/api';
-  return (
+  const raw =
     (window as any).API_BASE_URL ||
     import.meta.env.VITE_API_BASE_URL ||
     defaultBackend ||
     `${window.location.origin}/api` ||
-    'http://localhost:3000/api'
-  );
+    'http://localhost:3000/api';
+  // Garantir le suffixe /api
+  const trimmed = raw.replace(/\/+$/, '');
+  return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
 };
 
 const buildGroqCorrectionPrompt = (exercise: ExerciseStep, language: Language) => {
