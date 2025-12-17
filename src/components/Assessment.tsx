@@ -1,5 +1,43 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
+
+const getApiBaseUrl = () => {
+  const defaultBackend = 'https://f2x-o81l.onrender.com/api';
+  return (
+    (window as any).API_BASE_URL ||
+    import.meta.env.VITE_API_BASE_URL ||
+    defaultBackend ||
+    `${window.location.origin}/api` ||
+    'http://localhost:3000/api'
+  );
+};
+
+const buildGroqCorrectionPrompt = (exercise: ExerciseStep, language: Language) => {
+  const { type, rawData, title, problem } = exercise;
+  let context = '';
+
+  if (type === 'table' && rawData) {
+    const { valeurs, effectifs, total, label } = rawData;
+    context = `Tableau d'effectifs pour ${label}.\nValeurs : ${valeurs.join(', ')}\nEffectifs : ${effectifs.join(', ')}\nTotal attendu : ${total}`;
+  } else if (type === 'frequency' && rawData) {
+    const { valeurs, effectifs, total } = rawData;
+    const freqs = valeurs.map((v: number, i: number) => {
+      const eff = effectifs[i];
+      const dec = Math.round((eff / total) * 100) / 100;
+      const pct = Math.round((eff / total) * 100);
+      return `${v} -> frac ${eff}/${total}, décimal ${dec.toFixed(2)}, % ${pct}`;
+    }).join('\n');
+    context = `Fréquences attendues :\n${freqs}`;
+  } else if (type === 'indicators' && rawData) {
+    const { mean, median, range, rawList, unit } = rawData;
+    context = `Série : ${rawList?.join(', ')}\nMoyenne attendue : ${mean}${unit ? ' ' + unit : ''}\nMédiane attendue : ${median}${unit ? ' ' + unit : ''}\nÉtendue attendue : ${range}${unit ? ' ' + unit : ''}`;
+  }
+
+  if (language === 'fr') {
+    return `Corrige l'exercice suivant pour un élève de 3ème. Sois précis, bienveillant et étape-par-étape.\n\nTitre : ${title}\nÉnoncé : ${problem}\n${context}\n\nConsignes :\n- Liste les erreurs éventuelles et donne la bonne valeur/calcul.\n- Rappelle brièvement la méthode.\n- Reste concis.`;
+  }
+  return `Grade the following exercise for a 9th grader. Be precise, kind, and step-by-step.\n\nTitle: ${title}\nProblem: ${problem}\n${context}\n\nInstructions:\n- List possible mistakes and give the correct value/calculation.\n- Briefly remind the method.\n- Keep it concise.`;
+};
 import html2canvas from 'html2canvas';
 import { Camera, CheckCircle, AlertCircle, FileText, ChevronRight, Mail, RefreshCw, Eye, Star, Sparkles, ClipboardList } from 'lucide-react';
 import { generateExerciseData } from '../utils/exerciseGenerator';
@@ -711,6 +749,28 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
       ]);
 
       let feedback = feedbackResponse.text || (language === 'fr' ? "Analyse impossible." : "Analysis failed.");
+
+      // Amélioration texte avec Groq (pas de vision) si backend configuré (LLM_PROVIDER=groq)
+      try {
+        const apiBase = getApiBaseUrl().replace(/\/$/, '');
+        const groqPrompt = buildGroqCorrectionPrompt(currentExercise, language);
+        const groqResp = await fetch(`${apiBase}/tutor/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: groqPrompt, history: [], language })
+        });
+        if (groqResp.ok) {
+          const groqData = await groqResp.json();
+          const groqReply = groqData.reply;
+          if (groqReply) {
+            feedback = groqReply;
+          }
+        } else {
+          console.warn('Groq correction fallback failed', groqResp.status);
+        }
+      } catch (err) {
+        console.warn('Groq correction error', err);
+      }
 
       // Post-traitement : ajouter un bloc avec les fréquences attendues calculées par l'app
       if (currentExercise.type === 'frequency' && currentExercise.rawData) {
