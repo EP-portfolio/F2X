@@ -209,7 +209,7 @@ const getLessons = (lang: Language): LessonTopic[] => {
         content: (
           <div className="space-y-6">
             <p className="text-gray-600 text-lg">
-              The <strong>Relative Frequency</strong> represents the share of the total. It allows us to compare even if totals are different.
+              The <strong>Relative Frequency</strong> represents the relative importance of a value within the whole population. It lets you compare how important each value is even when populations have different sizes.
             </p>
             
             <div className="grid md:grid-cols-2 gap-4">
