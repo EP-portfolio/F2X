@@ -7,6 +7,7 @@ import assessmentRoutes from './routes/assessments.js';
 import recommendationRoutes from './routes/recommendations.js';
 import exerciseRoutes from './routes/exercises.js';
 import tutorRoutes from './routes/tutor.js';
+import visionRoutes from './routes/vision.js';
 import { setupScheduler } from './services/scheduler.js';
 
 dotenv.config();
@@ -64,6 +65,7 @@ app.use('/api/assessments', assessmentRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/tutor', tutorRoutes);
+app.use('/api/vision', visionRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

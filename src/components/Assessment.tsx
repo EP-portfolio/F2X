@@ -721,15 +721,9 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
     setIsGeneratingCorrection(true);
 
     try {
-      const apiKey = (window as any).API_KEY || import.meta.env.VITE_API_KEY;
-      if (!apiKey) throw new Error("Clé API manquante");
-
-      const ai = new GoogleGenAI({ apiKey });
-
-      // Optimiser l'image avant l'analyse
+      const apiBase = getApiBaseUrl().replace(/\/$/, '');
       const optimizedBase64Content = await optimizeImageForAnalysis(file);
 
-      // Générer le prompt amélioré avec les instructions spécifiques
       const analysisPrompt = genererPromptAnalyse({
         exerciseTitle: currentExercise.title,
         exerciseProblem: currentExercise.problem,
@@ -738,35 +732,22 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
         language: language
       });
 
-      // Utiliser un modèle optimisé pour la vision
-      // gemini-1.5-pro est excellent pour la vision mais plus lent
-      // gemini-2.0-flash-exp ou gemini-2.0-flash sont de bons compromis vitesse/qualité
-      // Fallback vers gemini-1.5-pro si le modèle n'est pas disponible
-      const modelName = 'gemini-1.5-pro'; // Modèle optimisé pour la vision et l'OCR
-
-      const feedbackPromise = ai.models.generateContent({
-        model: modelName,
-        contents: {
-          parts: [
-            { text: analysisPrompt },
-            { inlineData: { mimeType: 'image/jpeg', data: optimizedBase64Content } }
-          ]
-        },
-        config: {
-          temperature: 0.3, // Température plus basse pour des réponses plus précises
-          topP: 0.95,
-          topK: 40
-        }
+      const visionResp = await fetch(`${apiBase}/vision/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64: optimizedBase64Content, prompt: analysisPrompt, language })
       });
 
+      if (!visionResp.ok) {
+        const err = await visionResp.json().catch(() => ({}));
+        throw new Error(err.error || `Vision HTTP ${visionResp.status}`);
+      }
+
+      const visionData = await visionResp.json();
+      let feedback = visionData.reply || (language === 'fr' ? "Analyse impossible." : "Analysis failed.");
+
       const correctionImagePromise = generateNotebookImage(currentExercise, language);
-
-      const [feedbackResponse, correctionImageDataUrl] = await Promise.all([
-        feedbackPromise,
-        correctionImagePromise
-      ]);
-
-      let feedback = feedbackResponse.text || (language === 'fr' ? "Analyse impossible." : "Analysis failed.");
+      const correctionImageDataUrl = await correctionImagePromise;
 
       // Amélioration texte avec Groq (pas de vision) si backend configuré (LLM_PROVIDER=groq)
       try {
