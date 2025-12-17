@@ -126,11 +126,11 @@ const getLessons = (lang: Language): LessonTopic[] => {
                 <ul className="space-y-3 text-amber-900 font-medium">
                   <li className="flex gap-3 items-start">
                     <span className="bg-amber-200 text-amber-800 rounded-full w-6 h-6 flex items-center justify-center text-xs flex-shrink-0">1</span>
-                    Si total IMPAIR : C'est pile la valeur au centre.
+                    Si effectif total IMPAIR : c'est pile la valeur au centre (rang = (Eff total + 1) / 2).
                   </li>
                   <li className="flex gap-3 items-start">
                     <span className="bg-amber-200 text-amber-800 rounded-full w-6 h-6 flex items-center justify-center text-xs flex-shrink-0">2</span>
-                    Si total PAIR : C'est la moyenne des deux valeurs du centre.
+                    Si effectif total PAIR : c'est la moyenne des deux valeurs du centre (rang = (Eff total + 1) / 2, on prend les deux valeurs autour).
                   </li>
                 </ul>
               </div>
