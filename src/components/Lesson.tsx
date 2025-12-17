@@ -59,7 +59,7 @@ const getLessons = (lang: Language): LessonTopic[] => {
         content: (
           <div className="space-y-6">
             <p className="text-gray-600 text-lg">
-              La <strong>fréquence</strong>, c'est la part du gâteau 🍰. Elle permet de comparer même si les totaux sont différents.
+              La <strong>fréquence</strong> représente l'importance relative d'une valeur au sein de la population globale. Elle permet de comparer l'importance des valeurs entre des populations de tailles différentes.
             </p>
             
             <div className="grid md:grid-cols-2 gap-4">
