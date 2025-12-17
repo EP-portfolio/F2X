@@ -38,7 +38,11 @@ export const AiTutor: React.FC<AiTutorProps> = ({ language }) => {
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
     setIsLoading(true);
     try {
-      const apiBaseUrl = (window as any).API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+      const apiBaseUrl =
+        (window as any).API_BASE_URL ||
+        import.meta.env.VITE_API_BASE_URL ||
+        `${window.location.origin}/api` ||
+        'http://localhost:3000/api';
       const historyPayload = messages.map(m => ({ role: m.role, text: m.text }));
       const resp = await fetch(`${apiBaseUrl}/tutor/chat`, {
         method: 'POST',
@@ -57,8 +61,11 @@ export const AiTutor: React.FC<AiTutorProps> = ({ language }) => {
       const reply = data.reply || (language === 'fr' ? "Erreur de réponse." : "Response error.");
       setMessages(prev => [...prev, { role: 'model', text: reply }]);
     } catch (error: any) {
-      setMessages(prev => [...prev, { role: 'model', text: language === 'fr' ? "Erreur." : "Error.", isError: true }]);
       console.error('AI Tutor error', error);
+      const errMsg = language === 'fr'
+        ? `Erreur (tuteur) : ${error?.message || 'requête échouée'}`
+        : `Tutor error: ${error?.message || 'request failed'}`;
+      setMessages(prev => [...prev, { role: 'model', text: errMsg, isError: true }]);
     } finally {
       setIsLoading(false);
     }
