@@ -18,7 +18,7 @@ export async function getTutorResponse(message, history = [], language = 'fr') {
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-    const systemInstruction = language === 'fr'
+    const systemInstructionText = language === 'fr'
       ? `Tu es un professeur de mathématiques bienveillant pour des élèves de 3ème. Explique simplement et de manière encourageante.`
       : `You are a friendly Math teacher for Grade 9 students. Explain simply and encouragingly.`;
 
@@ -35,7 +35,7 @@ export async function getTutorResponse(message, history = [], language = 'fr') {
     }
 
     const chat = model.startChat({
-      systemInstruction: systemInstruction,
+      systemInstruction: { parts: [{ text: systemInstructionText }] },
       history: chatHistory
     });
 
