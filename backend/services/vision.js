@@ -15,6 +15,11 @@ export async function analyzeVisionImage(imageBase64, prompt, language = 'fr') {
     throw new Error('GEMINI_API_KEY not set');
   }
 
+  // Accepter data URL (data:image/jpeg;base64,...) et ne garder que le payload
+  const cleanBase64 = imageBase64.startsWith('data:')
+    ? imageBase64.split(',')[1] || ''
+    : imageBase64;
+
   const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({ model: VISION_MODEL });
 
@@ -23,7 +28,7 @@ export async function analyzeVisionImage(imageBase64, prompt, language = 'fr') {
     {
       inlineData: {
         mimeType: 'image/jpeg',
-        data: imageBase64
+        data: cleanBase64
       }
     }
   ]);
