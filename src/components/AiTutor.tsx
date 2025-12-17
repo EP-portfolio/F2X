@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI } from "@google/genai";
 import { ChatMessage, Language } from '../types';
 import { Send, Bot, User, Sparkles } from 'lucide-react';
 
@@ -34,15 +33,35 @@ export const AiTutor: React.FC<AiTutorProps> = ({ language }) => {
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
-    const userMessage = input; setInput(''); setMessages(prev => [...prev, { role: 'user', text: userMessage }]); setIsLoading(true);
+    const userMessage = input;
+    setInput('');
+    setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
+    setIsLoading(true);
     try {
-      const apiKey = (window as any).API_KEY || import.meta.env.VITE_API_KEY; if (!apiKey) throw new Error("API Key missing"); const ai = new GoogleGenAI({ apiKey });
-      const systemInstruction = language === 'fr' ? `Tu es un professeur de mathématiques bienveillant pour des élèves de 3ème. Explique simplement.` : `You are a friendly Math teacher for Grade 9 students. Explain simply.`;
-      const history = messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }));
-      const chat = ai.chats.create({ model: "gemini-2.5-flash", config: { systemInstruction }, history: history });
-      const response = await chat.sendMessage({ message: userMessage });
-      setMessages(prev => [...prev, { role: 'model', text: response.text || "Error." }]);
-    } catch (error) { setMessages(prev => [...prev, { role: 'model', text: "Error.", isError: true }]); } finally { setIsLoading(false); }
+      const apiBaseUrl = (window as any).API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+      const historyPayload = messages.map(m => ({ role: m.role, text: m.text }));
+      const resp = await fetch(`${apiBaseUrl}/tutor/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage,
+          history: historyPayload,
+          language
+        })
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${resp.status}`);
+      }
+      const data = await resp.json();
+      const reply = data.reply || (language === 'fr' ? "Erreur de réponse." : "Response error.");
+      setMessages(prev => [...prev, { role: 'model', text: reply }]);
+    } catch (error: any) {
+      setMessages(prev => [...prev, { role: 'model', text: language === 'fr' ? "Erreur." : "Error.", isError: true }]);
+      console.error('AI Tutor error', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } };
