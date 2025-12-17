@@ -10,7 +10,7 @@ if (!GEMINI_API_KEY) {
   console.warn('[VISION] GEMINI_API_KEY is not set. Vision proxy will fail until configured.');
 }
 
-export async function analyzeVisionImage(imageBase64, prompt, language = 'fr') {
+export async function analyzeVisionImage(imageBase64, prompt, language = 'fr', mimeType = 'image/jpeg') {
   if (!GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY not set');
   }
@@ -27,7 +27,7 @@ export async function analyzeVisionImage(imageBase64, prompt, language = 'fr') {
     { text: prompt },
     {
       inlineData: {
-        mimeType: 'image/jpeg',
+        mimeType,
         data: cleanBase64
       }
     }

@@ -7,7 +7,7 @@ const router = express.Router();
 // Body: { imageBase64: string, prompt: string, language?: 'fr' | 'en' }
 router.post('/analyze', async (req, res) => {
   try {
-    const { imageBase64, prompt, language = 'fr' } = req.body;
+    const { imageBase64, prompt, language = 'fr', mimeType = 'image/jpeg' } = req.body;
     if (!imageBase64 || !prompt) {
       return res.status(400).json({ error: 'imageBase64 and prompt are required' });
     }
@@ -15,9 +15,10 @@ router.post('/analyze', async (req, res) => {
     console.log('[VISION] analyze call', {
       lang: language,
       imgSize: imageBase64.length,
-      promptSize: prompt.length
+      promptSize: prompt.length,
+      mime: mimeType
     });
-    const reply = await analyzeVisionImage(imageBase64, prompt, language);
+    const reply = await analyzeVisionImage(imageBase64, prompt, language, mimeType);
     res.json({ reply });
   } catch (error) {
     console.error('Vision analyze error:', error);

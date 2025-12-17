@@ -734,10 +734,12 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
         language: language
       });
 
+      const mimeType = file.type || 'image/jpeg';
+
       const visionResp = await fetch(`${apiBase}/vision/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: optimizedBase64Content, prompt: analysisPrompt, language })
+        body: JSON.stringify({ imageBase64: optimizedBase64Content, prompt: analysisPrompt, language, mimeType })
       });
 
       if (!visionResp.ok) {
