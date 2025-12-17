@@ -467,7 +467,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
             language: language
           })
         }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 30000))
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 15000))
       ]) as Response;
       
       if (exerciseResponse.ok) {
@@ -488,7 +488,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
               language: language
             })
           }),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 30000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 15000))
         ]) as Response;
         
         if (answerResponse.ok) {

@@ -17,7 +17,7 @@ const genAI = new GoogleGenerativeAI(apiKey);
 export async function getTutorResponse(message, history = [], language = 'fr') {
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    
+
     const systemInstruction = language === 'fr'
       ? `Tu es un professeur de mathématiques bienveillant pour des élèves de 3ème. Explique simplement et de manière encourageante.`
       : `You are a friendly Math teacher for Grade 9 students. Explain simply and encouragingly.`;
@@ -47,16 +47,16 @@ export async function getTutorResponse(message, history = [], language = 'fr') {
 export async function analyzeStudentWork(imageBase64, exerciseData, language = 'fr') {
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    
+
     const analysisPrompt = generateAnalysisPrompt(exerciseData, language);
 
     const result = await model.generateContent([
       { text: analysisPrompt },
-      { 
-        inlineData: { 
-          mimeType: 'image/jpeg', 
-          data: imageBase64 
-        } 
+      {
+        inlineData: {
+          mimeType: 'image/jpeg',
+          data: imageBase64
+        }
       }
     ]);
 
@@ -74,13 +74,13 @@ export async function analyzeStudentWork(imageBase64, exerciseData, language = '
 export async function generateRecommendations(assessmentData, performanceHistory, language = 'fr') {
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    
+
     const prompt = generateRecommendationsPrompt(assessmentData, performanceHistory, language);
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
-    
+
     // Parse recommendations from text
     return parseRecommendations(text, language);
   } catch (error) {
@@ -91,7 +91,7 @@ export async function generateRecommendations(assessmentData, performanceHistory
 
 function generateAnalysisPrompt(exerciseData, language) {
   const { title, problem, type, rawData } = exerciseData;
-  
+
   if (language === 'fr') {
     return `
 Tu es un professeur de mathématiques qui corrige le travail d'un élève de 3ème.
@@ -132,7 +132,7 @@ Be encouraging and pedagogical. Format your response in clear paragraphs.
 function generateRecommendationsPrompt(assessmentData, performanceHistory, language) {
   const { overallScore, strengths, weaknesses, exercises } = assessmentData;
   const { averageScore, masteredChapters, totalTimeSpent } = performanceHistory;
-  
+
   if (language === 'fr') {
     return `
 Analyse cette session d'évaluation et l'historique de performance d'un élève de 3ème.
@@ -204,10 +204,10 @@ Be precise and actionable. Focus on identified weaknesses.
 export async function generateBrevetExercise(rawData, mean, median, language = 'fr') {
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    
+
     // Import the prompt generator (we'll need to adapt it for backend)
     const prompt = generateBrevetExercisePrompt(rawData, mean, median, language);
-    
+
     const result = await model.generateContent(prompt);
     const response = await result.response;
     return response.text();
@@ -223,7 +223,7 @@ export async function generateBrevetExercise(rawData, mean, median, language = '
 export async function generateBrevetAnswer(exerciseProblem, rawData, mean, median, language = 'fr') {
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    
+
     const answerPrompt = language === 'fr'
       ? `Basé sur cet exercice de statistiques : "${exerciseProblem}"
       
@@ -237,7 +237,7 @@ export async function generateBrevetAnswer(exerciseProblem, rawData, mean, media
       Mean = ${mean}, Median = ${median}
       
       Give a correct and complete answer to this exercise. If the exercise asks for calculations, provide them. If the exercise asks for an interpretation, explain it clearly.`;
-    
+
     const result = await model.generateContent(answerPrompt);
     const response = await result.response;
     return response.text();
@@ -347,8 +347,10 @@ function generateBrevetExercisePrompt(rawData, mean, median, language) {
     }
   ];
 
-  // Utiliser TOUS les exemples pour maximiser l'inspiration
-  const examplesText = allExamples.map((ex, i) => 
+  // Prélever un sous-ensemble aléatoire pour limiter la taille du prompt
+  const sampledExamples = [...allExamples].sort(() => Math.random() - 0.5).slice(0, 6);
+
+  const examplesText = sampledExamples.map((ex, i) =>
     `EXEMPLE ${i + 1} (${ex.source}) :
 Contexte : ${ex.context}
 Questions : ${ex.questions.map((q, idx) => `${idx + 1}. ${q}`).join('\n   ')}`
@@ -357,9 +359,9 @@ Questions : ${ex.questions.map((q, idx) => `${idx + 1}. ${q}`).join('\n   ')}`
   if (language === 'fr') {
     return `Tu es un créateur d'exercices de statistiques pour le Brevet des Collèges (niveau 3ème).
 
-TON OBJECTIF : Créer un NOUVEL exercice inspiré des ${allExamples.length} exemples du Brevet ci-dessous, MAIS SANS LES RÉPÉTER.
+TON OBJECTIF : Créer un NOUVEL exercice inspiré des ${sampledExamples.length} exemples du Brevet ci-dessous, MAIS SANS LES RÉPÉTER.
 
-⚠️ IMPORTANT : Tu as ${allExamples.length} exemples variés ci-dessous. Observe leur DIVERSITÉ de contextes, de formats de données, et de types de questions. INVENTE quelque chose de COMPLÈTEMENT DIFFÉRENT.
+⚠️ IMPORTANT : Tu as ${sampledExamples.length} exemples variés ci-dessous. Observe leur DIVERSITÉ de contextes, de formats de données, et de types de questions. INVENTE quelque chose de COMPLÈTEMENT DIFFÉRENT.
 
 TOUS LES EXEMPLES D'INSPIRATION (observe leur DIVERSITÉ) :
 ${examplesText}
@@ -369,7 +371,7 @@ Série de données : ${rawData.join(', ')}
 → Moyenne = ${mean}, Médiane = ${median}
 
 INSTRUCTIONS CRITIQUES :
-1. CRÉE UN NOUVEL EXERCICE : Ne répète AUCUN des ${allExamples.length} exemples ci-dessus. Inspire-toi de leur DIVERSITÉ de contextes, mais invente un contexte, des données et des questions complètement différents.
+1. CRÉE UN NOUVEL EXERCICE : Ne répète AUCUN des ${sampledExamples.length} exemples ci-dessus. Inspire-toi de leur DIVERSITÉ de contextes, mais invente un contexte, des données et des questions complètement différents.
 
 2. VARIÉTÉ DES CONTEXTES OBSERVÉE dans les exemples :
    - Sciences : plantules, tortues, ampoules, insolation
@@ -412,12 +414,12 @@ INSTRUCTIONS CRITIQUES :
 
 FORMAT DE RÉPONSE :
 Retourne UNIQUEMENT l'énoncé complet de l'exercice, sans titre ni numérotation. L'énoncé doit inclure :
-- Le contexte de l'exercice (situation réaliste et ORIGINALE, différente des ${allExamples.length} exemples ci-dessus)
+- Le contexte de l'exercice (situation réaliste et ORIGINALE, différente des ${sampledExamples.length} exemples ci-dessus)
 - La présentation des données (sous forme de liste, tableau, ou description claire)
 - Une ou plusieurs questions adaptées au contexte
 
 ⚠️ RAPPEL FINAL CRITIQUE : 
-- Ne répète AUCUN des ${allExamples.length} contextes ci-dessus (pas de plantules, pas de tortues, pas de notes, pas de véhicules, pas de skieurs, pas de braderie, pas de Tour de France, pas de 24h du Mans, pas de latinistes, pas d'ampoules, pas d'insolation, etc.)
+- Ne répète AUCUN des ${sampledExamples.length} contextes ci-dessus (pas de plantules, pas de tortues, pas de notes, pas de véhicules, pas de skieurs, pas de braderie, pas de Tour de France, pas de 24h du Mans, pas de latinistes, pas d'ampoules, pas d'insolation, etc.)
 - INVENTE un contexte NOUVEAU et ORIGINAL (ex: animaux sauvages différents, météo différente, consommation, environnement, sport différent, technologie, santé, agriculture, etc.)
 - Varie le format de présentation des données (liste, tableau, histogramme, classes)
 - Varie le type de questions (calculs, interprétations, pourcentages, justifications, comparaisons)
@@ -426,7 +428,7 @@ GÉNÈRE MAINTENANT UN EXERCICE COMPLÈTEMENT ORIGINAL ET DIFFÉRENT :`;
   } else {
     return `You are a statistics exercise creator for 9th Grade students.
 
-YOUR OBJECTIVE: Create a NEW exercise inspired by Brevet examples, BUT WITHOUT REPEATING THEM.
+YOUR OBJECTIVE: Create a NEW exercise inspired by ${sampledExamples.length} Brevet examples below, BUT WITHOUT REPEATING THEM.
 
 INSPIRATION EXAMPLES (observe their style, structure, and types of questions):
 ${examplesText}
@@ -436,7 +438,7 @@ Data series: ${rawData.join(', ')}
 → Mean = ${mean}, Median = ${median}
 
 CRITICAL INSTRUCTIONS:
-1. CREATE A NEW EXERCISE: Do NOT repeat ANY of the examples above. Be inspired by their style, but invent a completely different context, data, and questions.
+1. CREATE A NEW EXERCISE: Do NOT repeat ANY of the ${sampledExamples.length} examples above. Be inspired by their style, but invent a completely different context, data, and questions.
 
 2. OBSERVE THE EXAMPLES: They are varied:
    - Some ask to calculate indicators (mean, median, range)
@@ -473,11 +475,11 @@ function parseRecommendations(text, language) {
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     }
-    
+
     // Fallback: create structure from text
     const lines = text.split('\n').filter(line => line.trim());
     const recommendations = [];
-    
+
     for (let i = 0; i < lines.length && recommendations.length < 5; i++) {
       const line = lines[i].trim();
       if (line.match(/^\d+[\.\)]/) || line.startsWith('-') || line.startsWith('*')) {
@@ -491,26 +493,28 @@ function parseRecommendations(text, language) {
         });
       }
     }
-    
-    return { recommendations: recommendations.length > 0 ? recommendations : [
-      {
-        type: 'practice',
-        title: language === 'fr' ? 'Continuer la pratique' : 'Continue practicing',
-        description: language === 'fr' 
-          ? 'Pratique régulièrement les exercices pour améliorer tes compétences.'
-          : 'Practice regularly to improve your skills.',
-        priority: 'medium',
-        estimatedTime: '20',
-        chapter: 'Statistics'
-      }
-    ]};
+
+    return {
+      recommendations: recommendations.length > 0 ? recommendations : [
+        {
+          type: 'practice',
+          title: language === 'fr' ? 'Continuer la pratique' : 'Continue practicing',
+          description: language === 'fr'
+            ? 'Pratique régulièrement les exercices pour améliorer tes compétences.'
+            : 'Practice regularly to improve your skills.',
+          priority: 'medium',
+          estimatedTime: '20',
+          chapter: 'Statistics'
+        }
+      ]
+    };
   } catch (error) {
     console.error('Error parsing recommendations:', error);
     return {
       recommendations: [{
         type: 'practice',
         title: language === 'fr' ? 'Continuer la pratique' : 'Continue practicing',
-        description: language === 'fr' 
+        description: language === 'fr'
           ? 'Pratique régulièrement les exercices.'
           : 'Practice regularly.',
         priority: 'medium',
