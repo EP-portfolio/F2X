@@ -11,8 +11,14 @@ if (!apiKey) {
 
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// Modèle text géré par l'API v1beta (compatible generateContent/startChat)
-const MODEL_TEXT = 'gemini-1.0-pro';
+// Liste des modèles text connus pour v1beta :
+// - gemini-1.5-pro
+// - gemini-1.5-pro-001
+// - gemini-1.5-flash
+// - gemini-1.5-flash-001
+// - gemini-1.0-pro
+// Ici on utilise un modèle stable supporté par v1beta :
+const MODEL_TEXT = 'gemini-1.5-pro';
 
 /**
  * Get AI tutor response
