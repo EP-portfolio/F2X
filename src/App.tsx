@@ -84,7 +84,7 @@ const App: React.FC = () => {
             <div className="text-center space-y-8 py-10">
               <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 mb-4 animate-bounce">
                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span className="text-sm font-bold text-gray-600 uppercase tracking-wide">Nouveau Programme 2024</span>
+                <span className="text-sm font-bold text-gray-600 uppercase tracking-wide">Adapté Brevet 2026</span>
               </div>
               
               <h1 className="text-6xl md:text-7xl font-black text-gray-900 tracking-tight leading-tight">
