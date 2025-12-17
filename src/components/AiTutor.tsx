@@ -38,9 +38,11 @@ export const AiTutor: React.FC<AiTutorProps> = ({ language }) => {
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
     setIsLoading(true);
     try {
+      const defaultBackend = 'https://f2x-o81l.onrender.com/api';
       const apiBaseUrl =
         (window as any).API_BASE_URL ||
         import.meta.env.VITE_API_BASE_URL ||
+        defaultBackend ||
         `${window.location.origin}/api` ||
         'http://localhost:3000/api';
       const historyPayload = messages.map(m => ({ role: m.role, text: m.text }));
