@@ -383,7 +383,7 @@ INSTRUCTIONS CRITIQUES :
    → INVENTE UN CONTEXTE DIFFÉRENT de tous ceux-ci ! (ex: animaux, météo, sport, consommation, environnement, etc.)
 
 3. VARIÉTÉ DES QUESTIONS OBSERVÉE :
-   - Calculs d'indicateurs : moyenne, médiane, étendue, Q1, Q3
+   - Calculs d'indicateurs : moyenne, médiane, étendue
    - Interprétations : "Que signifie cette médiane ?", "Interpréter le résultat"
    - Pourcentages : "Quel pourcentage...", "Calculer la fréquence en %"
    - Comparaisons : "Comparer...", "Quelle classe compte le plus..."

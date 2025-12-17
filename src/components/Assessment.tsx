@@ -29,15 +29,7 @@ const getMedian = (nums: number[]) => {
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 !== 0 ? sorted[mid] : ((sorted[mid - 1] + sorted[mid]) / 2);
 };
-const getQuartiles = (nums: number[]) => {
-  const sorted = [...nums].sort((a, b) => a - b);
-  const n = sorted.length;
-  const q1Index = Math.ceil(n / 4) - 1;
-  const q3Index = Math.ceil((3 * n) / 4) - 1;
-  const q1 = sorted[q1Index];
-  const q3 = sorted[q3Index];
-  return { q1, q3, iqr: q3 - q1 };
-}
+const getRange = (nums: number[]) => Math.max(...nums) - Math.min(...nums);
 
 // --- NOTEBOOK RENDERER (Keep logic, update nothing visual inside the canvas generation as it simulates paper) ---
 const generateNotebookImage = async (exercise: ExerciseStep, language: Language): Promise<string> => {
@@ -115,7 +107,7 @@ const generateNotebookImage = async (exercise: ExerciseStep, language: Language)
     }
     tbody.appendChild(trTotal); table.appendChild(tbody); content.appendChild(table);
   } else if (exercise.type === 'indicators') {
-    const { mean, median, q1, q3, iqr, unit, rawList } = exercise.rawData;
+    const { mean, median, range, unit, rawList } = exercise.rawData;
     
     // Calculer les explications
     const sortedData = rawList ? [...rawList].sort((a, b) => a - b) : [];
@@ -153,26 +145,14 @@ const generateNotebookImage = async (exercise: ExerciseStep, language: Language)
         : `2. Median: Rank = (${n} + 1) / 2 = ${midRankInt}\n   Median = value at rank ${midRankInt} = ${mid} ${unit}`;
     }
     
-    // Q1 avec rappel du calcul du rang
-    const q1Index = Math.ceil(n / 4) - 1;
-    const q1Rank = q1Index + 1;
-    const q1Explanation = language === 'fr'
-      ? `3. Q1 : Rang = ${n} / 4 = ${n / 4} → rang ${q1Rank}\n   Q1 = valeur au rang ${q1Rank} = ${q1}`
-      : `3. Q1: Rank = ${n} / 4 = ${n / 4} → rank ${q1Rank}\n   Q1 = value at rank ${q1Rank} = ${q1}`;
+    // Étendue (max - min)
+    const minVal = Math.min(...sortedData);
+    const maxVal = Math.max(...sortedData);
+    const rangeExplanation = language === 'fr'
+      ? `3. Étendue : max - min = ${maxVal} - ${minVal} = ${range}`
+      : `3. Range: max - min = ${maxVal} - ${minVal} = ${range}`;
     
-    // Q3 avec rappel du calcul du rang
-    const q3Index = Math.ceil((3 * n) / 4) - 1;
-    const q3Rank = q3Index + 1;
-    const q3Explanation = language === 'fr'
-      ? `4. Q3 : Rang = 3 × ${n} / 4 = ${(3 * n) / 4} → rang ${q3Rank}\n   Q3 = valeur au rang ${q3Rank} = ${q3}`
-      : `4. Q3: Rank = 3 × ${n} / 4 = ${(3 * n) / 4} → rank ${q3Rank}\n   Q3 = value at rank ${q3Rank} = ${q3}`;
-    
-    // Écart interquartile
-    const iqrExplanation = language === 'fr'
-      ? `5. Écart Inter-quartile = Q3 - Q1 = ${q3} - ${q1} = ${iqr}`
-      : `5. Interquartile Range = Q3 - Q1 = ${q3} - ${q1} = ${iqr}`;
-    
-    const lines = [sortReminder, meanExplanation, medianExplanation, q1Explanation, q3Explanation, iqrExplanation];
+    const lines = [sortReminder, meanExplanation, medianExplanation, rangeExplanation];
     const ul = document.createElement('div');
     Object.assign(ul.style, { display: 'flex', flexDirection: 'column', gap: '20px', color: '#1a237e' });
     lines.forEach(line => { 
@@ -340,8 +320,8 @@ const generateProblemImage = async (exercise: ExerciseStep, language: Language):
 
     const tbody = document.createElement('tbody');
     const indicators = language === 'fr'
-      ? ['1. Moyenne', '2. Médiane', '3. Q1', '4. Q3', '5. Écart Inter-quartile']
-      : ['1. Mean', '2. Median', '3. Q1', '4. Q3', '5. Interquartile Range'];
+      ? ['1. Moyenne', '2. Médiane', '3. Étendue']
+      : ['1. Mean', '2. Median', '3. Range'];
     
     indicators.forEach((indicator, idx) => {
       const tr = document.createElement('tr');
@@ -409,7 +389,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
   const [emailSent, setEmailSent] = useState(false);
   const [answerModes, setAnswerModes] = useState<Record<number, 'photo' | 'manual'>>({});
   const [tableInputs, setTableInputs] = useState<Record<number, { effectifs: string[]; freqFrac: string[]; freqDec: string[]; freqPct: string[] }>>({});
-  const [indicatorsInputs, setIndicatorsInputs] = useState<Record<number, { mean: string; median: string; q1: string; q3: string; iqr: string }>>({});
+  const [indicatorsInputs, setIndicatorsInputs] = useState<Record<number, { mean: string; median: string; range: string }>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { 
@@ -425,7 +405,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
     const cleanDataDisplayB = dataB.rawList.join(', ');
     const mean3 = getMean(dataB.rawList);
     const median3 = getMedian(dataB.rawList);
-    const { q1, q3, iqr } = getQuartiles(dataB.rawList);
+    const rangeB = getRange(dataB.rawList);
     
     const ex1: ExerciseStep = { id: 1, title: language === 'fr' ? `Tableau : ${dataA.titre}` : `Table: ${dataA.titre}`, description: language === 'fr' ? "Regrouper les données brutes dans un tableau d'effectifs." : "Group raw data into a frequency table.", type: 'table', problem: language === 'fr' ? `Sondage sur "${dataA.titre}".\nDonnées brutes : ${cleanDataDisplayA}.\n\nConstruis le tableau des effectifs en regroupant les valeurs.` : `Survey on "${dataA.titre}".\nRaw Data: ${cleanDataDisplayA}.\n\nBuild the frequency table by grouping values.`, promptText: "", correctionPrompt: "", rawData: { valeurs: dataA.valeurs, effectifs: dataA.effectifs, total: dataA.total, label: dataA.label, frequences: dataA.frequences, arrondi: dataA.arrondi, titre: dataA.titre } };
     const ex2: ExerciseStep = {
@@ -440,7 +420,7 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
       correctionPrompt: "",
       rawData: { valeurs: dataA.valeurs, effectifs: dataA.effectifs, total: dataA.total, label: dataA.label, frequences: dataA.frequences, arrondi: dataA.arrondi, titre: dataA.titre }
     };
-    const ex3: ExerciseStep = { id: 3, title: `Stats : ${dataB.titre}`, description: "Moyenne, Médiane, Q1, Q3...", type: 'indicators', problem: `Série : ${cleanDataDisplayB}. Calcule tous les indicateurs.`, promptText: "", correctionPrompt: "", rawData: { mean: mean3, median: median3, q1, q3, iqr, unit: dataB.unite, rawList: dataB.rawList } };
+    const ex3: ExerciseStep = { id: 3, title: `Stats : ${dataB.titre}`, description: "Moyenne, Médiane, Étendue", type: 'indicators', problem: `Série : ${cleanDataDisplayB}. Calcule la moyenne, la médiane et l'étendue.`, promptText: "", correctionPrompt: "", rawData: { mean: mean3, median: median3, range: rangeB, unit: dataB.unite, rawList: dataB.rawList } };
     
     // Exercice 4 : Générer avec le LLM inspiré des exemples du Brevet via le backend
     // Utiliser les données de dataB pour avoir une série cohérente
@@ -809,9 +789,9 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
     });
   };
 
-  const handleIndicatorsInputChange = (exId: number, field: 'mean' | 'median' | 'q1' | 'q3' | 'iqr', value: string) => {
+  const handleIndicatorsInputChange = (exId: number, field: 'mean' | 'median' | 'range', value: string) => {
     setIndicatorsInputs(prev => {
-      const current = prev[exId] || { mean: '', median: '', q1: '', q3: '', iqr: '' };
+      const current = prev[exId] || { mean: '', median: '', range: '' };
       return { ...prev, [exId]: { ...current, [field]: value } };
     });
   };
@@ -835,15 +815,13 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
     if (!inputs) return;
 
     const errors: string[] = [];
-    const { mean, median, q1, q3, iqr, unit } = expected;
+    const { mean, median, range, unit } = expected;
 
     const parseValue = (val: string) => parseFloat(val.replace(',', '.'));
 
     const meanVal = parseValue(inputs.mean);
     const medianVal = parseValue(inputs.median);
-    const q1Val = parseValue(inputs.q1);
-    const q3Val = parseValue(inputs.q3);
-    const iqrVal = parseValue(inputs.iqr);
+    const rangeVal = parseValue(inputs.range);
 
     const tolerance = 0.1;
 
@@ -853,14 +831,8 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
     if (isNaN(medianVal) || Math.abs(medianVal - parseFloat(median)) > tolerance) {
       errors.push(language === 'fr' ? `Médiane attendue : ${median} ${unit}` : `Expected median: ${median} ${unit}`);
     }
-    if (isNaN(q1Val) || Math.abs(q1Val - parseFloat(q1)) > tolerance) {
-      errors.push(language === 'fr' ? `Q1 attendu : ${q1}` : `Expected Q1: ${q1}`);
-    }
-    if (isNaN(q3Val) || Math.abs(q3Val - parseFloat(q3)) > tolerance) {
-      errors.push(language === 'fr' ? `Q3 attendu : ${q3}` : `Expected Q3: ${q3}`);
-    }
-    if (isNaN(iqrVal) || Math.abs(iqrVal - parseFloat(iqr)) > tolerance) {
-      errors.push(language === 'fr' ? `Écart interquartile attendu : ${iqr}` : `Expected interquartile range: ${iqr}`);
+    if (isNaN(rangeVal) || Math.abs(rangeVal - parseFloat(range)) > tolerance) {
+      errors.push(language === 'fr' ? `Étendue attendue : ${range}` : `Expected range: ${range}`);
     }
 
     const successMsg = language === 'fr' ? "Bravo, tous les indicateurs sont corrects !" : "Great, all indicators are correct!";
@@ -1234,38 +1206,14 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
                             </td>
                           </tr>
                           <tr className="bg-white">
-                            <td className="p-2 font-semibold text-gray-700 border">3. Q1</td>
+                            <td className="p-2 font-semibold text-gray-700 border">{language === 'fr' ? '3. Étendue (max - min)' : '3. Range (max - min)'}</td>
                             <td className="p-2 border">
                               <input
                                 type="text"
                                 className="w-full px-2 py-1 border rounded-lg text-center"
                                 placeholder={language === 'fr' ? 'Ex: 12' : 'Ex: 12'}
-                                value={indicatorsInputs[currentExercise.id]?.q1 || ''}
-                                onChange={(e) => handleIndicatorsInputChange(currentExercise.id, 'q1', e.target.value)}
-                              />
-                            </td>
-                          </tr>
-                          <tr className="bg-white">
-                            <td className="p-2 font-semibold text-gray-700 border">4. Q3</td>
-                            <td className="p-2 border">
-                              <input
-                                type="text"
-                                className="w-full px-2 py-1 border rounded-lg text-center"
-                                placeholder={language === 'fr' ? 'Ex: 18' : 'Ex: 18'}
-                                value={indicatorsInputs[currentExercise.id]?.q3 || ''}
-                                onChange={(e) => handleIndicatorsInputChange(currentExercise.id, 'q3', e.target.value)}
-                              />
-                            </td>
-                          </tr>
-                          <tr className="bg-white">
-                            <td className="p-2 font-semibold text-gray-700 border">{language === 'fr' ? '5. Écart Inter-quartile' : '5. Interquartile Range'}</td>
-                            <td className="p-2 border">
-                              <input
-                                type="text"
-                                className="w-full px-2 py-1 border rounded-lg text-center"
-                                placeholder={language === 'fr' ? 'Ex: 6' : 'Ex: 6'}
-                                value={indicatorsInputs[currentExercise.id]?.iqr || ''}
-                                onChange={(e) => handleIndicatorsInputChange(currentExercise.id, 'iqr', e.target.value)}
+                                value={indicatorsInputs[currentExercise.id]?.range || ''}
+                                onChange={(e) => handleIndicatorsInputChange(currentExercise.id, 'range', e.target.value)}
                               />
                             </td>
                           </tr>

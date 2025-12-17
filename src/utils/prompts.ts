@@ -245,13 +245,10 @@ INSTRUCTIONS SPÉCIFIQUES - INDICATEURS STATISTIQUES :
 1. **Vérification des calculs** :
    - **Moyenne** : Vérifie que la formule (Somme des valeurs / Nombre de valeurs) est correctement appliquée
    - **Médiane** : Vérifie que les données sont triées, puis que la valeur médiane est correctement identifiée
-   - **Q1 (Premier Quartile)** : Vérifie le calcul au rang N/4
-   - **Q3 (Troisième Quartile)** : Vérifie le calcul au rang 3N/4
    - **Étendue** : Vérifie que c'est bien (Maximum - Minimum)
-   - **Écart interquartile** : Vérifie que c'est bien (Q3 - Q1)
 
 2. **Points à vérifier** :
-   - Les données sont-elles correctement triées pour la médiane et les quartiles ?
+   - Les données sont-elles correctement triées pour la médiane ?
    - Les formules sont-elles correctement appliquées ?
    - Les résultats sont-ils arrondis correctement si nécessaire ?
    - Tous les indicateurs demandés sont-ils présents ?
@@ -269,12 +266,8 @@ INSTRUCTIONS SPÉCIFIQUES - INDICATEURS STATISTIQUES :
        "2. Médiane : Rang = ([n] + 1) / 2 = [résultat décimal] (nombre pair)\n   Médiane = (valeur au rang [floor(rang)] + valeur au rang [ceil(rang)]) / 2\n   Médiane = ([val1] + [val2]) / 2 = [résultat] [unité]"
      * Si nombre impair : Format EXACT :
        "2. Médiane : Rang = ([n] + 1) / 2 = [rang entier]\n   Médiane = valeur au rang [rang] = [valeur] [unité]"
-   - **Q1** : Format EXACT sur plusieurs lignes :
-     "3. Q1 : Rang = [n] / 4 = [résultat] → rang [rang final]\n   Q1 = valeur au rang [rang final] = [valeur]"
-   - **Q3** : Format EXACT sur plusieurs lignes :
-     "4. Q3 : Rang = 3 × [n] / 4 = [résultat] → rang [rang final]\n   Q3 = valeur au rang [rang final] = [valeur]"
-   - **Écart interquartile** : Format EXACT :
-     "5. Écart Inter-quartile = Q3 - Q1 = [q3] - [q1] = [résultat]"
+   - **Étendue** : Format EXACT :
+     "3. Étendue : max - min = [max] - [min] = [résultat]"
    - **Si correct** : Commence par "✅ Correct" puis affiche TOUTES les explications de calcul détaillées ci-dessous (copie-les exactement)
    - **Si incorrect** : Indique quel(s) indicateur(s) est/sont faux, puis montre le calcul correct avec TOUTES les étapes détaillées (copie le format exact des explications attendues)
 `;
@@ -287,9 +280,7 @@ INSTRUCTIONS SPÉCIFIQUES - INDICATEURS STATISTIQUES :
 
             let meanExplanation = '';
             let medianExplanation = '';
-            let q1Explanation = '';
-            let q3Explanation = '';
-            let iqrExplanation = '';
+            let rangeExplanation = '';
 
             if (n > 0) {
                const sortReminder = `Étape 1 : Réarranger la liste dans l'ordre croissant\nSérie triée : ${sortedData.join(', ')}`;
@@ -312,13 +303,9 @@ INSTRUCTIONS SPÉCIFIQUES - INDICATEURS STATISTIQUES :
                   medianExplanation = `2. Médiane : Rang = (${n} + 1) / 2 = ${midRankInt}\n   Médiane = valeur au rang ${midRankInt} = ${mid} ${rawData.unit || ''}`;
                }
 
-               const q1Index = Math.ceil(n / 4) - 1;
-               const q3Index = Math.ceil((3 * n) / 4) - 1;
-               const q1Rank = q1Index + 1;
-               const q3Rank = q3Index + 1;
-               q1Explanation = `3. Q1 : Rang = ${n} / 4 = ${n / 4} → rang ${q1Rank}\n   Q1 = valeur au rang ${q1Rank} = ${rawData.q1 || 'N/A'}`;
-               q3Explanation = `4. Q3 : Rang = 3 × ${n} / 4 = ${(3 * n) / 4} → rang ${q3Rank}\n   Q3 = valeur au rang ${q3Rank} = ${rawData.q3 || 'N/A'}`;
-               iqrExplanation = `5. Écart Inter-quartile = Q3 - Q1 = ${rawData.q3 || 'N/A'} - ${rawData.q1 || 'N/A'} = ${rawData.iqr || 'N/A'}`;
+               const minVal = Math.min(...sortedData);
+               const maxVal = Math.max(...sortedData);
+               rangeExplanation = `3. Étendue : max - min = ${maxVal} - ${minVal} = ${rawData.range || 'N/A'}`;
 
                specificInstructions += `
 RÉSULTATS ATTENDUS AVEC EXPLICATIONS DE CALCUL COMPLÈTES (COPIE EXACTEMENT CES EXPLICATIONS) :
@@ -326,9 +313,7 @@ RÉSULTATS ATTENDUS AVEC EXPLICATIONS DE CALCUL COMPLÈTES (COPIE EXACTEMENT CES
 ${sortReminder}
 ${meanExplanation || `Moyenne : ${rawData.mean || 'N/A'} ${rawData.unit || ''}`}
 ${medianExplanation || `Médiane : ${rawData.median || 'N/A'} ${rawData.unit || ''}`}
-${q1Explanation || `Q1 : ${rawData.q1 || 'N/A'}`}
-${q3Explanation || `Q3 : ${rawData.q3 || 'N/A'}`}
-${iqrExplanation || `Écart interquartile : ${rawData.iqr || 'N/A'}`}
+${rangeExplanation || `Étendue : ${rawData.range || 'N/A'}`}
 
 ⚠️ INSTRUCTIONS CRITIQUES ⚠️
 - Même si l'élève a tout juste, tu DOIS afficher TOUTES les explications ci-dessus dans ton feedback
@@ -343,9 +328,7 @@ ${iqrExplanation || `Écart interquartile : ${rawData.iqr || 'N/A'}`}
 RÉSULTATS ATTENDUS (pour référence) :
 - Moyenne : ${rawData.mean || 'N/A'} ${rawData.unit || ''}
 - Médiane : ${rawData.median || 'N/A'} ${rawData.unit || ''}
-- Q1 : ${rawData.q1 || 'N/A'}
-- Q3 : ${rawData.q3 || 'N/A'}
-- Écart interquartile : ${rawData.iqr || 'N/A'}
+- Étendue : ${rawData.range || 'N/A'}
 `;
             }
          }
@@ -502,13 +485,10 @@ SPECIFIC INSTRUCTIONS - STATISTICAL INDICATORS :
 1. **Calculation verification** :
    - **Mean** : Verify that the formula (Sum of values / Number of values) is correctly applied
    - **Median** : Verify that data is sorted, then that the median value is correctly identified
-   - **Q1 (First Quartile)** : Verify calculation at rank N/4
-   - **Q3 (Third Quartile)** : Verify calculation at rank 3N/4
    - **Range** : Verify that it's (Maximum - Minimum)
-   - **Interquartile Range** : Verify that it's (Q3 - Q1)
 
 2. **Points to check** :
-   - Is data correctly sorted for median and quartiles?
+   - Is data correctly sorted for median?
    - Are formulas correctly applied?
    - Are results correctly rounded if necessary?
    - Are all requested indicators present?
@@ -526,12 +506,8 @@ SPECIFIC INSTRUCTIONS - STATISTICAL INDICATORS :
        "2. Median: Rank = ([n] + 1) / 2 = [decimal result] (even number)\n   Median = (value at rank [floor(rank)] + value at rank [ceil(rank)]) / 2\n   Median = ([val1] + [val2]) / 2 = [result] [unit]"
      * If odd number : EXACT Format :
        "2. Median: Rank = ([n] + 1) / 2 = [integer rank]\n   Median = value at rank [rank] = [value] [unit]"
-   - **Q1** : EXACT Format on multiple lines :
-     "3. Q1: Rank = [n] / 4 = [result] → rank [final rank]\n   Q1 = value at rank [final rank] = [value]"
-   - **Q3** : EXACT Format on multiple lines :
-     "4. Q3: Rank = 3 × [n] / 4 = [result] → rank [final rank]\n   Q3 = value at rank [final rank] = [value]"
-   - **Interquartile Range** : EXACT Format :
-     "5. Interquartile Range = Q3 - Q1 = [q3] - [q1] = [result]"
+   - **Range** : EXACT Format :
+     "3. Range: max - min = [max] - [min] = [result]"
    - **If correct** : Start with "✅ Correct" then display ALL the detailed calculation explanations below (copy them exactly)
    - **If incorrect** : Indicate which indicator(s) is/are wrong, then show the correct calculation with ALL detailed steps (copy the exact format of expected explanations)
 `;
@@ -544,9 +520,7 @@ SPECIFIC INSTRUCTIONS - STATISTICAL INDICATORS :
 
             let meanExplanation = '';
             let medianExplanation = '';
-            let q1Explanation = '';
-            let q3Explanation = '';
-            let iqrExplanation = '';
+            let rangeExplanation = '';
 
             if (n > 0) {
                const sortReminder = `Step 1: Rearrange the list in ascending order\nSorted series: ${sortedData.join(', ')}`;
@@ -569,13 +543,9 @@ SPECIFIC INSTRUCTIONS - STATISTICAL INDICATORS :
                   medianExplanation = `2. Median: Rank = (${n} + 1) / 2 = ${midRankInt}\n   Median = value at rank ${midRankInt} = ${mid} ${rawData.unit || ''}`;
                }
 
-               const q1Index = Math.ceil(n / 4) - 1;
-               const q3Index = Math.ceil((3 * n) / 4) - 1;
-               const q1Rank = q1Index + 1;
-               const q3Rank = q3Index + 1;
-               q1Explanation = `3. Q1: Rank = ${n} / 4 = ${n / 4} → rank ${q1Rank}\n   Q1 = value at rank ${q1Rank} = ${rawData.q1 || 'N/A'}`;
-               q3Explanation = `4. Q3: Rank = 3 × ${n} / 4 = ${(3 * n) / 4} → rank ${q3Rank}\n   Q3 = value at rank ${q3Rank} = ${rawData.q3 || 'N/A'}`;
-               iqrExplanation = `5. Interquartile Range = Q3 - Q1 = ${rawData.q3 || 'N/A'} - ${rawData.q1 || 'N/A'} = ${rawData.iqr || 'N/A'}`;
+               const minVal = Math.min(...sortedData);
+               const maxVal = Math.max(...sortedData);
+               rangeExplanation = `3. Range: max - min = ${maxVal} - ${minVal} = ${rawData.range || 'N/A'}`;
 
                specificInstructions += `
 EXPECTED RESULTS WITH COMPLETE CALCULATION EXPLANATIONS (COPY EXACTLY THESE EXPLANATIONS) :
@@ -583,9 +553,7 @@ EXPECTED RESULTS WITH COMPLETE CALCULATION EXPLANATIONS (COPY EXACTLY THESE EXPL
 ${sortReminder}
 ${meanExplanation || `Mean : ${rawData.mean || 'N/A'} ${rawData.unit || ''}`}
 ${medianExplanation || `Median : ${rawData.median || 'N/A'} ${rawData.unit || ''}`}
-${q1Explanation || `Q1 : ${rawData.q1 || 'N/A'}`}
-${q3Explanation || `Q3 : ${rawData.q3 || 'N/A'}`}
-${iqrExplanation || `Interquartile Range : ${rawData.iqr || 'N/A'}`}
+${rangeExplanation || `Range : ${rawData.range || 'N/A'}`}
 
 ⚠️ CRITICAL INSTRUCTIONS ⚠️
 - Even if the student got everything right, you MUST display ALL the explanations above in your feedback
@@ -600,9 +568,7 @@ ${iqrExplanation || `Interquartile Range : ${rawData.iqr || 'N/A'}`}
 EXPECTED RESULTS (for reference) :
 - Mean : ${rawData.mean || 'N/A'} ${rawData.unit || ''}
 - Median : ${rawData.median || 'N/A'} ${rawData.unit || ''}
-- Q1 : ${rawData.q1 || 'N/A'}
-- Q3 : ${rawData.q3 || 'N/A'}
-- Interquartile Range : ${rawData.iqr || 'N/A'}
+- Range : ${rawData.range || 'N/A'}
 `;
             }
          }
@@ -659,12 +625,18 @@ ${expectedAnswer}
 
       return basePrompt + specificInstructions + `
 
-EXPECTED RESPONSE FORMAT :
-- Start with a clear verdict : "✅ Correct" or "❌ Needs correction"
-- List checked points
-- For each error, explain clearly and propose the correction
-- Be encouraging and pedagogical
-- Use bullets (*) to structure your response
+EXPECTED RESPONSE FORMAT (clear, structuré, très pédagogique) :
+- Verdict : "✅ Correct" ou "❌ À corriger"
+- Points corrects : ce que l'élève a bien fait
+- Erreurs et corrections (pour chaque erreur) :
+  * Ce qui cloche
+  * Correction détaillée pas-à-pas avec calculs/interprétations
+  * Formule utilisée (ex: moyenne = somme / effectif ; médiane = (n+1)/2 ; fréquence = effectif/total)
+  * Résultat attendu sur cette étape
+- Résultat attendu global : rappeler toutes les valeurs finales (moyenne, médiane, étendue, fréquences décimales et % arrondis) en suivant les règles d'arrondi
+- Conseil : une phrase d'encouragement + quoi refaire pour progresser (ex: “revois le tri des données”, “pense à calculer le rang (n+1)/2 pour la médiane”, “arrondis les % à l’unité”)
+- Format : listes à puces, phrases courtes
+- Ton : bienveillant, clair, concis
 `;
    }
 }
