@@ -38,6 +38,24 @@ const buildGroqCorrectionPrompt = (exercise: ExerciseStep, language: Language) =
   }
   return `Grade the following exercise for a 9th grader. Be precise, kind, and step-by-step.\n\nTitle: ${title}\nProblem: ${problem}\n${context}\n\nInstructions:\n- List possible mistakes and give the correct value/calculation.\n- Briefly remind the method.\n- Keep it concise.`;
 };
+
+const getGroqCorrectionText = async (exercise: ExerciseStep, language: Language, fallback: string) => {
+  try {
+    const apiBase = getApiBaseUrl().replace(/\/$/, '');
+    const groqPrompt = buildGroqCorrectionPrompt(exercise, language);
+    const groqResp = await fetch(`${apiBase}/tutor/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: groqPrompt, history: [], language })
+    });
+    if (!groqResp.ok) return fallback;
+    const groqData = await groqResp.json();
+    return groqData.reply || fallback;
+  } catch (err) {
+    console.warn('Groq correction text error', err);
+    return fallback;
+  }
+};
 import html2canvas from 'html2canvas';
 import { Camera, CheckCircle, AlertCircle, FileText, ChevronRight, Mail, RefreshCw, Eye, Star, Sparkles, ClipboardList } from 'lucide-react';
 import { generateExerciseData } from '../utils/exerciseGenerator';
@@ -897,7 +915,8 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
 
     const successMsg = language === 'fr' ? "Bravo, tous les indicateurs sont corrects !" : "Great, all indicators are correct!";
     const errorHeader = language === 'fr' ? "Points à corriger :" : "Fix these:";
-    const feedback = errors.length === 0 ? successMsg : [errorHeader, ...errors.map(e => `• ${e}`)].join('\n');
+    const feedbackBase = errors.length === 0 ? successMsg : [errorHeader, ...errors.map(e => `• ${e}`)].join('\n');
+    const feedback = await getGroqCorrectionText(exercise, language, feedbackBase);
 
     setFeedbackHistory(prev => { const n = [...prev]; n[currentStepIndex] = feedback; return n; });
     const correctionImg = await generateNotebookImage(exercise, language);
@@ -962,7 +981,8 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
 
     const successMsg = language === 'fr' ? "Bravo, tableau complété correctement !" : "Great, table completed correctly!";
     const errorHeader = language === 'fr' ? "Points à corriger :" : "Fix these:";
-    const feedback = errors.length === 0 ? successMsg : [errorHeader, ...errors.map(e => `- ${e}`)].join('\n');
+    const feedbackBase = errors.length === 0 ? successMsg : [errorHeader, ...errors.map(e => `- ${e}`)].join('\n');
+    const feedback = await getGroqCorrectionText(exercise, language, feedbackBase);
 
     setFeedbackHistory(prev => { const n = [...prev]; n[currentStepIndex] = feedback; return n; });
     const correctionImg = await generateNotebookImage(exercise, language);
