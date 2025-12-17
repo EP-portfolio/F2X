@@ -22,10 +22,17 @@ export async function getTutorResponse(message, history = [], language = 'fr') {
       ? `Tu es un professeur de mathématiques bienveillant pour des élèves de 3ème. Explique simplement et de manière encourageante.`
       : `You are a friendly Math teacher for Grade 9 students. Explain simply and encouragingly.`;
 
-    const chatHistory = history.map(msg => ({
-      role: msg.role === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.text }]
-    }));
+    // Sanitize history: Gemini attend que le premier message soit un 'user'
+    const chatHistory = [];
+    for (const msg of history || []) {
+      if (!msg?.text) continue;
+      const role = msg.role === 'user' ? 'user' : 'model';
+      if (chatHistory.length === 0 && role === 'model') {
+        // ignore leading model messages
+        continue;
+      }
+      chatHistory.push({ role, parts: [{ text: msg.text }] });
+    }
 
     const chat = model.startChat({
       systemInstruction: systemInstruction,
