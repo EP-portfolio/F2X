@@ -133,6 +133,9 @@ const getLessons = (lang: Language): LessonTopic[] => {
                     Si effectif total PAIR : c'est la moyenne des deux valeurs du centre (rang = (Eff total + 1) / 2, on prend les deux valeurs autour).
                   </li>
                 </ul>
+                <p className="mt-3 text-amber-800 font-semibold">
+                  Interprétation : au moins 50% des valeurs sont inférieures ou égales à la médiane.
+                </p>
               </div>
             </div>
           </div>
@@ -140,7 +143,7 @@ const getLessons = (lang: Language): LessonTopic[] => {
       },
       {
         id: 'dispersion',
-        title: '4. Quartiles (Q1, Q3) et Étendue',
+        title: '4. Étendue',
         description: 'Les données sont-elles étalées ?',
         content: (
           <div className="space-y-6">
@@ -148,29 +151,6 @@ const getLessons = (lang: Language): LessonTopic[] => {
                 <h4 className="font-bold text-xl mb-1 opacity-90">L'Étendue</h4>
                 <p className="text-emerald-50 text-sm mb-3 opacity-80">La distance entre les extrêmes.</p>
                 <div className="text-3xl font-black tracking-tight">Max - Min</div>
-            </div>
-
-            <div>
-                <h4 className="font-bold text-violet-800 text-xl mb-4 px-2">Les Quartiles (Q1 et Q3)</h4>
-                <div className="grid gap-4">
-                    <div className="bg-white p-5 rounded-3xl border-2 border-violet-100 hover:border-violet-300 transition-colors">
-                        <div className="flex justify-between items-center mb-2">
-                           <strong className="text-violet-900 text-lg">Q1 (Premier Quartile)</strong>
-                           <span className="bg-violet-100 text-violet-700 px-2 py-1 rounded-lg text-xs font-bold">25%</span>
-                        </div>
-                        <p className="text-gray-500 text-sm">Le premier quart de la classe est en dessous de cette note.</p>
-                        <div className="mt-3 bg-gray-50 rounded-xl p-2 text-center text-violet-600 font-mono text-sm">Rang : N ÷ 4</div>
-                    </div>
-
-                    <div className="bg-white p-5 rounded-3xl border-2 border-fuchsia-100 hover:border-fuchsia-300 transition-colors">
-                        <div className="flex justify-between items-center mb-2">
-                           <strong className="text-fuchsia-900 text-lg">Q3 (Troisième Quartile)</strong>
-                           <span className="bg-fuchsia-100 text-fuchsia-700 px-2 py-1 rounded-lg text-xs font-bold">75%</span>
-                        </div>
-                        <p className="text-gray-500 text-sm">Les trois quarts de la classe sont en dessous.</p>
-                        <div className="mt-3 bg-gray-50 rounded-xl p-2 text-center text-fuchsia-600 font-mono text-sm">Rang : 3 × N ÷ 4</div>
-                    </div>
-                </div>
             </div>
           </div>
         )
@@ -296,13 +276,16 @@ const getLessons = (lang: Language): LessonTopic[] => {
                 <ul className="space-y-3 text-amber-900 font-medium">
                   <li className="flex gap-3 items-start">
                     <span className="bg-amber-200 text-amber-800 rounded-full w-6 h-6 flex items-center justify-center text-xs flex-shrink-0">1</span>
-                    If ODD total: It's exactly the middle value.
+                    If ODD total count: it's exactly the middle value (rank = (Total count + 1) / 2).
                   </li>
                   <li className="flex gap-3 items-start">
                     <span className="bg-amber-200 text-amber-800 rounded-full w-6 h-6 flex items-center justify-center text-xs flex-shrink-0">2</span>
-                    If EVEN total: It's the average of the two middle values.
+                    If EVEN total count: it's the average of the two middle values (rank = (Total count + 1) / 2, take the two surrounding values).
                   </li>
                 </ul>
+                <p className="mt-3 text-amber-800 font-semibold">
+                  Interpretation: at least 50% of the values are less than or equal to the median.
+                </p>
               </div>
             </div>
           </div>
@@ -310,7 +293,7 @@ const getLessons = (lang: Language): LessonTopic[] => {
       },
       {
         id: 'dispersion',
-        title: '4. Quartiles (Q1, Q3) and Range',
+        title: '4. Range',
         description: 'Is the data spread out?',
         content: (
           <div className="space-y-6">
@@ -318,29 +301,6 @@ const getLessons = (lang: Language): LessonTopic[] => {
                 <h4 className="font-bold text-xl mb-1 opacity-90">The Range</h4>
                 <p className="text-emerald-50 text-sm mb-3 opacity-80">The distance between extremes.</p>
                 <div className="text-3xl font-black tracking-tight">Max - Min</div>
-            </div>
-
-            <div>
-                <h4 className="font-bold text-violet-800 text-xl mb-4 px-2">Quartiles (Q1 and Q3)</h4>
-                <div className="grid gap-4">
-                    <div className="bg-white p-5 rounded-3xl border-2 border-violet-100 hover:border-violet-300 transition-colors">
-                        <div className="flex justify-between items-center mb-2">
-                           <strong className="text-violet-900 text-lg">Q1 (First Quartile)</strong>
-                           <span className="bg-violet-100 text-violet-700 px-2 py-1 rounded-lg text-xs font-bold">25%</span>
-                        </div>
-                        <p className="text-gray-500 text-sm">The first quarter of the data is below this value.</p>
-                        <div className="mt-3 bg-gray-50 rounded-xl p-2 text-center text-violet-600 font-mono text-sm">Rank: N ÷ 4</div>
-                    </div>
-
-                    <div className="bg-white p-5 rounded-3xl border-2 border-fuchsia-100 hover:border-fuchsia-300 transition-colors">
-                        <div className="flex justify-between items-center mb-2">
-                           <strong className="text-fuchsia-900 text-lg">Q3 (Third Quartile)</strong>
-                           <span className="bg-fuchsia-100 text-fuchsia-700 px-2 py-1 rounded-lg text-xs font-bold">75%</span>
-                        </div>
-                        <p className="text-gray-500 text-sm">Three quarters of the data are below this value.</p>
-                        <div className="mt-3 bg-gray-50 rounded-xl p-2 text-center text-fuchsia-600 font-mono text-sm">Rank: 3 × N ÷ 4</div>
-                    </div>
-                </div>
             </div>
           </div>
         )
