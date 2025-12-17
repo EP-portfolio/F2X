@@ -1,5 +1,6 @@
 import express from 'express';
 import { getTutorResponse } from '../services/gemini.js';
+import { getTutorResponseGroq } from '../services/groq.js';
 
 const router = express.Router();
 
@@ -15,7 +16,15 @@ router.post('/chat', async (req, res) => {
       return res.status(400).json({ error: 'message is required' });
     }
 
-    const reply = await getTutorResponse(message, history, language);
+    const provider = (process.env.LLM_PROVIDER || 'gemini').toLowerCase();
+    let reply;
+
+    if (provider === 'groq') {
+      reply = await getTutorResponseGroq(message, history, language);
+    } else {
+      reply = await getTutorResponse(message, history, language);
+    }
+
     res.json({ reply });
   } catch (error) {
     console.error('Tutor chat error:', error);
