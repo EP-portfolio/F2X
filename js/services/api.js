@@ -1,6 +1,11 @@
 // API client for backend communication
 
-const API_BASE_URL = window.API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = (() => {
+  const defaultBackend = 'https://f2x-o81l.onrender.com/api';
+  const raw = window.API_BASE_URL || defaultBackend || 'http://localhost:3000/api';
+  const trimmed = raw.replace(/\/+$/, '');
+  return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`;
+})();
 
 // Get auth token from localStorage
 function getToken() {

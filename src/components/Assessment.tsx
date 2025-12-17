@@ -620,7 +620,15 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
       setIsEnriching(true);
       try {
         const apiKey = (window as any).API_KEY || import.meta.env.VITE_API_KEY;
-        if (!apiKey) throw new Error("API Key missing");
+        if (!apiKey) {
+          // Pas de clé : ignorer l'enrichissement pour éviter les erreurs en production
+          setExercises(prev => {
+            const next = [...prev];
+            next[currentStepIndex] = { ...next[currentStepIndex], isEnriched: true };
+            return next;
+          });
+          return;
+        }
         const ai = new GoogleGenAI({ apiKey });
         const prompt = genererPromptEnonce(currentExercise.rawData, language);
         const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
