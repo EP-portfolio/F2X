@@ -11,12 +11,14 @@ if (!apiKey) {
 
 const genAI = new GoogleGenerativeAI(apiKey);
 
+const MODEL_TEXT = 'gemini-1.5-flash-latest';
+
 /**
  * Get AI tutor response
  */
 export async function getTutorResponse(message, history = [], language = 'fr') {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-001' });
+    const model = genAI.getGenerativeModel({ model: MODEL_TEXT });
 
     const systemInstructionText = language === 'fr'
       ? `Tu es un professeur de mathématiques bienveillant pour des élèves de 3ème. Explique simplement et de manière encourageante.`
@@ -53,7 +55,7 @@ export async function getTutorResponse(message, history = [], language = 'fr') {
  */
 export async function analyzeStudentWork(imageBase64, exerciseData, language = 'fr') {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-001' });
+    const model = genAI.getGenerativeModel({ model: MODEL_TEXT });
 
     const analysisPrompt = generateAnalysisPrompt(exerciseData, language);
 
@@ -80,7 +82,7 @@ export async function analyzeStudentWork(imageBase64, exerciseData, language = '
  */
 export async function generateRecommendations(assessmentData, performanceHistory, language = 'fr') {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-001' });
+    const model = genAI.getGenerativeModel({ model: MODEL_TEXT });
 
     const prompt = generateRecommendationsPrompt(assessmentData, performanceHistory, language);
 
@@ -210,7 +212,7 @@ Be precise and actionable. Focus on identified weaknesses.
  */
 export async function generateBrevetExercise(rawData, mean, median, language = 'fr') {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-001' });
+    const model = genAI.getGenerativeModel({ model: MODEL_TEXT });
 
     // Import the prompt generator (we'll need to adapt it for backend)
     const prompt = generateBrevetExercisePrompt(rawData, mean, median, language);
@@ -229,7 +231,7 @@ export async function generateBrevetExercise(rawData, mean, median, language = '
  */
 export async function generateBrevetAnswer(exerciseProblem, rawData, mean, median, language = 'fr') {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-001' });
+    const model = genAI.getGenerativeModel({ model: MODEL_TEXT });
 
     const answerPrompt = language === 'fr'
       ? `Basé sur cet exercice de statistiques : "${exerciseProblem}"
