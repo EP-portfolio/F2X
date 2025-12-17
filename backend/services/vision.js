@@ -4,7 +4,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 dotenv.config();
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const VISION_MODEL = process.env.GEMINI_VISION_MODEL || 'gemini-1.5-pro';
+// Modèle vision par défaut compatible v1beta : gemini-1.0-pro-vision-latest
+const VISION_MODEL = process.env.GEMINI_VISION_MODEL || 'gemini-1.0-pro-vision-latest';
 
 if (!GEMINI_API_KEY) {
   console.warn('[VISION] GEMINI_API_KEY is not set. Vision proxy will fail until configured.');
