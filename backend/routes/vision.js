@@ -11,6 +11,12 @@ router.post('/analyze', async (req, res) => {
     if (!imageBase64 || !prompt) {
       return res.status(400).json({ error: 'imageBase64 and prompt are required' });
     }
+    // Quelques logs de debug (sans loguer l'image entière)
+    console.log('[VISION] analyze call', {
+      lang: language,
+      imgSize: imageBase64.length,
+      promptSize: prompt.length
+    });
     const reply = await analyzeVisionImage(imageBase64, prompt, language);
     res.json({ reply });
   } catch (error) {

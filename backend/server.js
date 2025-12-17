@@ -50,7 +50,8 @@ if (process.env.NODE_ENV !== 'production') {
     credentials: true
   }));
 }
-app.use(express.json({ limit: '10mb' })); // Increased limit for image uploads
+// Increase body size for images (vision)
+app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Health check

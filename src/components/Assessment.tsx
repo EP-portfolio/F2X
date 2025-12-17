@@ -739,8 +739,10 @@ export const Assessment: React.FC<AssessmentProps> = ({ language }) => {
       });
 
       if (!visionResp.ok) {
-        const err = await visionResp.json().catch(() => ({}));
-        throw new Error(err.error || `Vision HTTP ${visionResp.status}`);
+        const errJson = await visionResp.json().catch(() => ({}));
+        const detail = errJson.error || `Vision HTTP ${visionResp.status}`;
+        console.error('Vision analyze failed', detail);
+        throw new Error(detail);
       }
 
       const visionData = await visionResp.json();
