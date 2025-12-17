@@ -14,6 +14,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:8000';
+const FRONTEND_REGEX = process.env.FRONTEND_REGEX || /\.onrender\.com$/;
 
 // Middleware
 const allowedOrigins = [
@@ -34,8 +35,12 @@ if (process.env.NODE_ENV !== 'production') {
     origin: function (origin, callback) {
       // Allow requests with no origin (mobile apps, Postman, etc.)
       if (!origin) return callback(null, true);
-      
-      if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('vercel.app') || origin.includes('netlify.app')) {
+
+      const isAllowedList = allowedOrigins.indexOf(origin) !== -1;
+      const isRender = FRONTEND_REGEX && FRONTEND_REGEX.test && FRONTEND_REGEX.test(origin);
+      const isVercelOrNetlify = origin.includes('vercel.app') || origin.includes('netlify.app');
+
+      if (isAllowedList || isRender || isVercelOrNetlify) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
