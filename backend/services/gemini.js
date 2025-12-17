@@ -11,14 +11,10 @@ if (!apiKey) {
 
 const genAI = new GoogleGenerativeAI(apiKey);
 
-// Liste des modèles text connus pour v1beta :
-// - gemini-1.5-pro
-// - gemini-1.5-pro-001
-// - gemini-1.5-flash
-// - gemini-1.5-flash-001
-// - gemini-1.0-pro
-// Ici on utilise un modèle stable supporté par v1beta :
-const MODEL_TEXT = 'gemini-1.5-pro';
+// Liste (v1beta) : gemini-1.5-flash, gemini-1.5-flash-001, gemini-1.5-pro, gemini-1.5-pro-001, gemini-1.0-pro
+// Par défaut on prend un modèle flash plus largement disponible (souvent accessible sur clés gratuites) ;
+// surcharge possible via la variable d'environnement GEMINI_MODEL.
+const MODEL_TEXT = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 
 /**
  * Get AI tutor response
